@@ -133,6 +133,7 @@ When receiving a post request from Gitlab, it will retrieve the token and verify
 
 - PUSH
 - TAG
+- RELEASE
 - ISSUE
 - CONFIDENTIAL_ISSUE
 - NOTE

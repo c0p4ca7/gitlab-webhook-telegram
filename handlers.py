@@ -35,9 +35,25 @@ def tag_handler(data, bot, chats):
         verbosity = chat[1]
         message = f'New tag event on project {data["project"]["name"]}'
         if verbosity >= VV:
+            message += f'\nTag :{data["ref"].lstrip("refs/tags/")}'
             message += (
                 f'\nURL : {data["project"]["web_url"]}/-/{data["ref"].lstrip("refs/")}'
             )
+        bot.send_message(chat_id=chat[0], message=message)
+
+
+def release_handler(data, bot, chats):
+    """
+    Defines the handler for when a release event is received
+    """
+    for chat in chats:
+        verbosity = chat[1]
+        message = f'New release event on project {data["project"]["name"]}'
+        if verbosity >= VV:
+            message += f'\nName : {data["name"]}'
+            message += f'\nTag : {data["tag"]}'
+            message += f'\nDescription : {data["description"]}'
+            message += f'\nURL : {data["url"]}'
         bot.send_message(chat_id=chat[0], message=message)
 
 
@@ -51,13 +67,8 @@ def issue_handler(data, bot, chats):
         message = ""
         if oa["confidential"]:
             message += "[confidential] "
-        message += (
-            "New issue event"
-            + " on project "
-            + data["project"]["name"]
-            + "\nTitle : "
-            + oa["title"]
-        )
+        message += f'New issue event on project {data["project"]["name"]}'
+        message += f'\nTitle : {oa["title"]}'
         if verbosity >= VVVV and oa["description"]:
             message += f'\nDescription : {oa["description"]}'
         message += f'\nState : {oa["state"]}'
@@ -84,16 +95,16 @@ def note_handler(data, bot, chats):
         message = "New note on "
         if "commit" in data:
             message += "commit "
-            info = "\nCommit : " + data["commit"]["url"]
+            info = f'\nCommit : {data["commit"]["url"]}'
         elif "merge_request" in data:
             message += "merge request "
-            info = "\nMerge request : " + data["merge_request"]["title"]
+            info = f'\nMerge request : {data["merge_request"]["title"]}'
         elif "issue" in data:
             message += "issue "
-            info = "\nIssue : " + data["issue"]["title"]
+            info = f'\nIssue : {data["issue"]["title"]}'
         else:
             message += "snippet "
-            info = "\nSnippet : " + data["snippet"]["title"]
+            info = f'\nSnippet : {data["snippet"]["title"]}'
         message += f'on project {data["project"]["name"]}'
         message += info
         message += f'\nNote : {data["object_attributes"]["note"]}'

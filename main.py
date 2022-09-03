@@ -32,6 +32,7 @@ MODE_CHANGE_VERBOSITY_2 = 4
 
 PUSH = "Push Hook"
 TAG = "Tag Push Hook"
+RELEASE = "Release Hook"
 ISSUE = "Issue Hook"
 CONFIDENTIAL_ISSUE = "Confidential Issue Hook"
 NOTE = "Note Hook"
@@ -44,6 +45,7 @@ PIPELINE = "Pipeline Hook"
 HANDLERS = {
     PUSH: handlers.push_handler,
     TAG: handlers.tag_handler,
+    RELEASE: handlers.release_handler,
     ISSUE: handlers.issue_handler,
     CONFIDENTIAL_ISSUE: handlers.issue_handler,
     NOTE: handlers.note_handler,
