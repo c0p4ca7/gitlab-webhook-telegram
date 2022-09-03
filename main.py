@@ -1,10 +1,7 @@
 """
 Gitlab-webhook-telegram
-
-Options:
-    -v --version    Show version
-    -h --help       Display this screen
 """
+
 import json
 import logging
 import os
@@ -80,14 +77,13 @@ class Context:
     A class to pass all the parameters and shared values
     """
 
-    def __init__(self, directory, print_log):
+    def __init__(self, directory):
         self.directory = directory
         self.button_mode = MODE_NONE
         self.wait_for_verification = False
         self.config = None
         self.verified_chats = None
         self.table = None
-        self.print_log = print_log
 
     def get_config(self):
         """
@@ -104,11 +100,11 @@ class Context:
         if not all(
             key in self.config
             for key in (
-                "configure-by-telegram",
-                "telegram-token",
-                "passphrase",
                 "gitlab-projects",
                 "log-level",
+                "passphrase",
+                "port",
+                "telegram-token",
             )
         ):
             print(
@@ -237,27 +233,24 @@ class Bot:
         bot.send_message(
             chat_id=chat_id, text="Hi. I'm a simple bot triggered by GitLab webhooks."
         )
-        if self.context.config["configure-by-telegram"]:
-            if chat_id in self.context.verified_chats:
-                bot.send_message(
-                    chat_id=chat_id,
-                    text="Since your chat is verified, you can add project by typing /addProject",
-                )
-            else:
-                bot.send_message(
-                    chat_id=chat_id,
-                    text="First things first : you need to verify this chat. Just send the passphrase (if you don't want to, add the chat id : "
-                    + str(chat_id)
-                    + "  in the list of verified chats)",
-                )
-                self.context.wait_for_verification = True
+        if chat_id in self.context.verified_chats:
+            bot.send_message(
+                chat_id=chat_id,
+                text="Since your chat is already verified, you can see what you can do here by typing /help",
+            )
+        elif not self.context.config["passphrase"]:
+            self.context.verified_chats.append(chat_id)
+            self.context.write_verified_chats()
+            bot.send_message(
+                chat_id=chat_id,
+                text="Your chat is now verified, you can see what you can do here by typing /help",
+            )
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="If you want to configure the bot with telegram, please set the 'configure-by-telegram' option to true in the settings. If you don't want to, add the chat id : "
-                + str(chat_id)
-                + "  in the list of verified chats",
+                text="First things first : you need to verify this chat. Just send me the passphrase",
             )
+            self.context.wait_for_verification = True
 
     def add_project(self, update, context):
         """
@@ -265,45 +258,46 @@ class Bot:
         """
         chat_id = update.message.chat_id
         bot = context.bot
-        if self.context.config["configure-by-telegram"]:
-            if chat_id in self.context.verified_chats:
-                self.context.button_mode = MODE_ADD_PROJECT
-                inline_keyboard = []
-                projects = [
-                    project
-                    for project in self.context.config["gitlab-projects"]
-                    if (
-                        project["token"] in self.context.table
-                        and chat_id not in self.context.table[project["token"]]
+        if chat_id in self.context.verified_chats:
+            self.context.button_mode = MODE_ADD_PROJECT
+            inline_keyboard = []
+            projects = [
+                project
+                for project in self.context.config["gitlab-projects"]
+                if (
+                    str(chat_id) in project["user-ids"]
+                    and (
+                        (
+                            project["token"] in self.context.table
+                            and chat_id not in self.context.table[project["token"]]
+                        )
                         or project["token"] not in self.context.table
                     )
-                ]
-                if len(projects) > 0:
-                    for project in projects:
-                        print(project)
-                        inline_keyboard.append(
-                            [
-                                telegram.InlineKeyboardButton(
-                                    text=project["name"], callback_data=project["token"]
-                                )
-                            ]
-                        )
-                    replyKeyboard = telegram.InlineKeyboardMarkup(
-                        inline_keyboard=inline_keyboard
+                )
+            ]
+            if len(projects) > 0:
+                for project in projects:
+                    inline_keyboard.append(
+                        [
+                            telegram.InlineKeyboardButton(
+                                text=project["name"], callback_data=project["token"]
+                            )
+                        ]
                     )
-                    bot.send_message(
-                        chat_id=chat_id,
-                        reply_markup=replyKeyboard,
-                        text="Choose the project you want to add.",
-                    )
-                else:
-                    bot.send_message(chat_id=chat_id, text="No project to add.")
+                replyKeyboard = telegram.InlineKeyboardMarkup(
+                    inline_keyboard=inline_keyboard
+                )
+                bot.send_message(
+                    chat_id=chat_id,
+                    reply_markup=replyKeyboard,
+                    text="Choose the project you want to add.",
+                )
             else:
-                bot.send_message(chat_id=chat_id, text="This chat is no verified.")
+                bot.send_message(chat_id=chat_id, text="No project to add.")
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="If you want to configure the bot with telegram, please set the 'configure-by-telegram' option to true in the settings.",
+                text="This chat is not verified, start with the command /start.",
             )
 
     def change_verbosity(self, update, context):
@@ -312,45 +306,42 @@ class Bot:
         """
         chat_id = update.message.chat_id
         bot = context.bot
-        if self.context.config["configure-by-telegram"]:
-            if chat_id in self.context.verified_chats:
-                self.context.button_mode = MODE_CHANGE_VERBOSITY_1
-                inline_keyboard = []
-                projects = [
-                    project
-                    for project in self.context.config["gitlab-projects"]
-                    if (
-                        project["token"] in self.context.table
-                        and chat_id in self.context.table[project["token"]]
+        if chat_id in self.context.verified_chats:
+            self.context.button_mode = MODE_CHANGE_VERBOSITY_1
+            inline_keyboard = []
+            projects = [
+                project
+                for project in self.context.config["gitlab-projects"]
+                if (
+                    project["token"] in self.context.table
+                    and chat_id in self.context.table[project["token"]]
+                )
+            ]
+            if len(projects) > 0:
+                for project in projects:
+                    inline_keyboard.append(
+                        [
+                            telegram.InlineKeyboardButton(
+                                text=project["name"], callback_data=project["token"]
+                            )
+                        ]
                     )
-                ]
-                if len(projects) > 0:
-                    for project in projects:
-                        inline_keyboard.append(
-                            [
-                                telegram.InlineKeyboardButton(
-                                    text=project["name"], callback_data=project["token"]
-                                )
-                            ]
-                        )
-                    replyKeyboard = telegram.InlineKeyboardMarkup(
-                        inline_keyboard=inline_keyboard
-                    )
-                    bot.send_message(
-                        chat_id=chat_id,
-                        reply_markup=replyKeyboard,
-                        text="Choose the project from which you want to change verbosity.",
-                    )
-                else:
-                    bot.send_message(
-                        chat_id=chat_id, text="No project configured on this chat."
-                    )
+                replyKeyboard = telegram.InlineKeyboardMarkup(
+                    inline_keyboard=inline_keyboard
+                )
+                bot.send_message(
+                    chat_id=chat_id,
+                    reply_markup=replyKeyboard,
+                    text="Choose the project from which you want to change verbosity.",
+                )
             else:
-                bot.send_message(chat_id=chat_id, text="This chat is no verified.")
+                bot.send_message(
+                    chat_id=chat_id, text="No project configured on this chat."
+                )
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="If you want to configure the bot with telegram, please set the 'configure-by-telegram' option to true in the settings.",
+                text="This chat is not verified, start with the command /start.",
             )
 
     def remove_project(self, update, context):
@@ -359,43 +350,40 @@ class Bot:
         """
         chat_id = update.message.chat_id
         bot = context.bot
-        if self.context.config["configure-by-telegram"]:
-            if chat_id in self.context.verified_chats:
-                self.context.button_mode = MODE_REMOVE_PROJECT
-                inline_keyboard = []
-                projects = [
-                    project
-                    for project in self.context.config["gitlab-projects"]
-                    if (
-                        project["token"] in self.context.table
-                        and chat_id in self.context.table[project["token"]]
+        if chat_id in self.context.verified_chats:
+            self.context.button_mode = MODE_REMOVE_PROJECT
+            inline_keyboard = []
+            projects = [
+                project
+                for project in self.context.config["gitlab-projects"]
+                if (
+                    project["token"] in self.context.table
+                    and chat_id in self.context.table[project["token"]]
+                )
+            ]
+            if len(projects) > 0:
+                for project in projects:
+                    inline_keyboard.append(
+                        [
+                            telegram.InlineKeyboardButton(
+                                text=project["name"], callback_data=project["token"]
+                            )
+                        ]
                     )
-                ]
-                if len(projects) > 0:
-                    for project in projects:
-                        inline_keyboard.append(
-                            [
-                                telegram.InlineKeyboardButton(
-                                    text=project["name"], callback_data=project["token"]
-                                )
-                            ]
-                        )
-                    replyKeyboard = telegram.InlineKeyboardMarkup(
-                        inline_keyboard=inline_keyboard
-                    )
-                    bot.send_message(
-                        chat_id=chat_id,
-                        reply_markup=replyKeyboard,
-                        text="Choose the project you want to remove.",
-                    )
-                else:
-                    bot.send_message(chat_id=chat_id, text="No project to remove.")
+                replyKeyboard = telegram.InlineKeyboardMarkup(
+                    inline_keyboard=inline_keyboard
+                )
+                bot.send_message(
+                    chat_id=chat_id,
+                    reply_markup=replyKeyboard,
+                    text="Choose the project you want to remove.",
+                )
             else:
-                bot.send_message(chat_id=chat_id)
+                bot.send_message(chat_id=chat_id, text="No project to remove.")
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="If you want to configure the bot with telegram, please set the 'configure-by-telegram' option to true in the settings.",
+                text="This chat is not verified, start with the command /start.",
             )
 
     def button(self, update, context):
@@ -492,13 +480,14 @@ class Bot:
                 self.context.verified_chats.append(update.message.chat_id)
                 self.context.write_verified_chats()
                 bot.send_message(
-                    chat_id=update.message.chat_id, text="Ok. The chat is now verified"
+                    chat_id=update.message.chat_id,
+                    text="Thank you, your user ID is now verified.",
                 )
                 self.context.wait_for_verification = False
             else:
                 bot.send_message(
                     chat_id=update.message.chat_id,
-                    text="The passphrase is incorrect. Still waiting for verification",
+                    text="The passphrase is incorrect. Still waiting for verification.",
                 )
 
     def help(self, update, context):
@@ -506,11 +495,13 @@ class Bot:
         Defines the handler for /help command
         """
         bot = context.bot
-        message = "Project gitlab-webhook-telegram v1.1\n"
-        if self.context.config["configure-by-telegram"]:
-            message += """You have enabled configuration by telegram. You can use the following commands : \n\n/start : Use to verify the chat\n/listProjects : list projects of the chat\n/addProject : add a project in this chat\n/removeProject : remove a project from this chat\n/changeVerbosity : change the level of information of a chat\n/help : Display this message\n\nIf you want to disable the configuration by telegram, you may change the setting configure-by-telegram to false."""
-        else:
-            message += "You have disabled configuration by telegram. You can use the /help command to display this message and the /listProjects command to display projects of this chat. If you want to enable the configuration by telegram, you may change the setting configure-by-telegram to true."
+        message = "Project gitlab-webhook-telegram v1.0.0\n"
+        message += "You can use the following commands : \n\n"
+        message += "/listProjects : list tracked projects in this chat\n"
+        message += "/addProject : add a project in this chat\n"
+        message += "/removeProject : remove a project from this chat\n"
+        message += "/changeVerbosity : change the level of information of a chat\n"
+        message += "/help : Display this message"
         bot.send_message(chat_id=update.message.chat_id, text=message)
 
     def list_projects(self, update, context):
@@ -527,10 +518,11 @@ class Bot:
         message = "Projects : \n"
         if len(projects) == 0:
             message += "There is no project"
-        for project in projects:
+        for id, project in enumerate(projects):
             message += (
-                project["name"]
-                + "("
+                f"{id+1} - "
+                + project["name"]
+                + " (Verbosity: "
                 + str(self.context.table[project["token"]][chat_id])
                 + ")\n"
             )
@@ -598,15 +590,14 @@ class App:
     Override init and run command
     """
 
-    def __init__(self, directory, print_log, *args, **kwargs):
+    def __init__(self, directory):
         self.directory = directory
-        self.print_log = print_log
 
     def run(self):
         """
         run is called when the app starts
         """
-        context = Context(self.directory, self.print_log)
+        context = Context(self.directory)
         context.get_config()
         logging.info("Starting gitlab-webhook-telegram app")
         logging.info(
@@ -637,7 +628,7 @@ class App:
 
 def main():
     directory = os.getenv("GWT_DIR", "./")
-    app = App(directory, True)
+    app = App(directory)
     app.run()
 
 
