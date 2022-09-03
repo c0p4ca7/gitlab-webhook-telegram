@@ -2,6 +2,8 @@
 This file defines all the handlers needed by the server
 """
 
+from emoji import emojize
+
 V = 0
 VV = 1
 VVV = 2
@@ -18,9 +20,11 @@ def push_handler(data, bot, chats):
             message = f'New commit on project {data["project"]["name"]}'
             message += f'\nAuthor : {commit["author"]["name"]}'
             if verbosity != VVVV:
-                message += "\nMessage: " + commit["message"].partition("\n")[0]
+                message += "\nMessage: " + emojize(
+                    commit["message"].partition("\n")[0], language="alias"
+                )
             else:
-                message += f'\nMessage: {commit["message"]}'
+                message += f'\nMessage: {emojize(commit["message"], language="alias")}'
             if verbosity >= VV:
                 message += f'\nUrl : {commit["url"]}'
 
@@ -52,7 +56,9 @@ def release_handler(data, bot, chats):
         if verbosity >= VV:
             message += f'\nName : {data["name"]}'
             message += f'\nTag : {data["tag"]}'
-            message += f'\nDescription : {data["description"]}'
+            message += (
+                f'\nDescription : {emojize(data["description"], language="alias")}'
+            )
             message += f'\nURL : {data["url"]}'
         bot.send_message(chat_id=chat[0], message=message)
 
@@ -70,7 +76,7 @@ def issue_handler(data, bot, chats):
         message += f'New issue event on project {data["project"]["name"]}'
         message += f'\nTitle : {oa["title"]}'
         if verbosity >= VVVV and oa["description"]:
-            message += f'\nDescription : {oa["description"]}'
+            message += f'\nDescription : {emojize(oa["description"], language="alias")}'
         message += f'\nState : {oa["state"]}'
         message += f'\nURL : {oa["url"]}'
         if verbosity >= VVV:
@@ -107,7 +113,9 @@ def note_handler(data, bot, chats):
             info = f'\nSnippet : {data["snippet"]["title"]}'
         message += f'on project {data["project"]["name"]}'
         message += info
-        message += f'\nNote : {data["object_attributes"]["note"]}'
+        message += (
+            f'\nNote : {emojize(data["object_attributes"]["note"], language="alias")}'
+        )
         if verbosity >= VV:
             message += f'\nURL : {data["object_attributes"]["url"]}'
         bot.send_message(chat_id=chat[0], message=message)

@@ -1,1 +1,2 @@
 python-telegram-bot==13.13
+emoji==2.0.0
