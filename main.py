@@ -11,26 +11,27 @@ Options:
     -v --version    Show version
     -h --help       Display this screen
 """
-import sys
 import json
-import telegram
 import logging
-import socketserver
-import handlers
 import os
+import socketserver
+import sys
 import time
-
 from http.server import BaseHTTPRequestHandler
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    CallbackQueryHandler,
-    MessageHandler,
-    Filters,
-)
-from daemon import Daemon
-from docopt import docopt
 from logging.handlers import RotatingFileHandler
+
+import telegram
+from docopt import docopt
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    Filters,
+    MessageHandler,
+    Updater,
+)
+
+import handlers
+from daemon import Daemon
 
 """
 Here comes constant definitions
@@ -71,10 +72,16 @@ VVV = 2
 VVVV = 3
 
 VERBOSITIES = [
-    (V, "Print all except issues descriptions, assignees, due dates, labels, commit messages and URLs and reduce commit messages to 1 line"),
-    (VV, "Print all except issues descriptions, assignees, due dates and labels and reduce commit messages to 1 line"),
+    (
+        V,
+        "Print all except issues descriptions, assignees, due dates, labels, commit messages and URLs and reduce commit messages to 1 line",
+    ),
+    (
+        VV,
+        "Print all except issues descriptions, assignees, due dates and labels and reduce commit messages to 1 line",
+    ),
     (VVV, "Print all but issues descriptions and reduce commit messages to 1 line"),
-    (VVVV, "Print all")
+    (VVVV, "Print all"),
 ]
 
 
@@ -91,7 +98,7 @@ class Context:
         self.verified_chats = None
         self.table = None
         self.print_log = print_log
-        
+
     def get_config(self):
         """
         Load the config file and transform it into a python usable var
@@ -103,17 +110,36 @@ class Context:
             print("Impossible to read config.json file. Exception follows")
             print(str(e))
             sys.exit()
-        
-        if not all (key in self.config for key in ("configure-by-telegram", "telegram-token", "passphrase", "gitlab-projects", "log-file", "log-level")):
-            print("config.json seems to be corrupted. Compare with config.json.example.")
+
+        if not all(
+            key in self.config
+            for key in (
+                "configure-by-telegram",
+                "telegram-token",
+                "passphrase",
+                "gitlab-projects",
+                "log-file",
+                "log-level",
+            )
+        ):
+            print(
+                "config.json seems to be corrupted. Compare with config.json.example."
+            )
             sys.exit()
-        
-        numeric_level = getattr(logging, self.config['log-level'], None)
+
+        numeric_level = getattr(logging, self.config["log-level"], None)
         if self.print_log:
-            logging.basicConfig(level=numeric_level, format='%(asctime)s - %(levelname)s - %(message)s')
+            logging.basicConfig(
+                level=numeric_level, format="%(asctime)s - %(levelname)s - %(message)s"
+            )
         else:
-            logging.basicConfig(filename=self.config['log-file'], filemode='w', level=numeric_level, format='%(asctime)s - %(levelname)s - %(message)s')
-        
+            logging.basicConfig(
+                filename=self.config["log-file"],
+                filemode="w",
+                level=numeric_level,
+                format="%(asctime)s - %(levelname)s - %(message)s",
+            )
+
         try:
             with open(self.directory + "verified_chats.json") as verified_chats_file:
                 self.verified_chats = json.load(verified_chats_file)
@@ -186,7 +212,9 @@ class Bot:
         remove_project_handler = CommandHandler("removeProject", self.remove_project)
         self.dispatcher.add_handler(remove_project_handler)
 
-        change_verbosity_handler = CommandHandler("changeVerbosity", self.change_verbosity)
+        change_verbosity_handler = CommandHandler(
+            "changeVerbosity", self.change_verbosity
+        )
         self.dispatcher.add_handler(change_verbosity_handler)
 
         list_projects_handlers = CommandHandler("listProjects", self.list_projects)
@@ -235,7 +263,9 @@ class Bot:
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="If you want to configure the bot with telegram, please set the 'configure-by-telegram' option to true in the settings. If you don't want to, add the chat id : " + str(chat_id) + "  in the list of verified chats"
+                text="If you want to configure the bot with telegram, please set the 'configure-by-telegram' option to true in the settings. If you don't want to, add the chat id : "
+                + str(chat_id)
+                + "  in the list of verified chats",
             )
 
     def add_project(self, update, context):
@@ -264,7 +294,7 @@ class Bot:
                                 telegram.InlineKeyboardButton(
                                     text=project["name"], callback_data=project["token"]
                                 )
-                           ]
+                            ]
                         )
                     replyKeyboard = telegram.InlineKeyboardMarkup(
                         inline_keyboard=inline_keyboard
@@ -320,7 +350,9 @@ class Bot:
                         text="Choose the project from which you want to change verbosity.",
                     )
                 else:
-                    bot.send_message(chat_id=chat_id, text="No project configured on this chat.")
+                    bot.send_message(
+                        chat_id=chat_id, text="No project configured on this chat."
+                    )
             else:
                 bot.send_message(chat_id=chat_id, text="This chat is no verified.")
         else:
@@ -427,7 +459,7 @@ class Bot:
                 inline_keyboard.append(
                     [
                         telegram.InlineKeyboardButton(
-                            text=str(i) + ":" + verbosity[1], callback_data=i+1
+                            text=str(i) + ":" + verbosity[1], callback_data=i + 1
                         )
                     ]
                 )
@@ -439,7 +471,7 @@ class Bot:
                 message_verbosities += "- " + str(verb[0]) + " : " + verb[1] + "\n"
             bot.edit_message_text(
                 chat_id=chat_id,
-                message_id=query.message.message_id, 
+                message_id=query.message.message_id,
                 reply_markup=replyKeyboard,
                 text=message_verbosities + "\nChoose the new verbosity.",
             )
@@ -451,7 +483,7 @@ class Bot:
             self.context.write_table()
             bot.edit_message_text(
                 chat_id=chat_id,
-                message_id=query.message.message_id, 
+                message_id=query.message.message_id,
                 text="The verbosity of the project has been changed.",
             )
             self.context.selected_project = None
@@ -492,7 +524,9 @@ class Bot:
     def list_projects(self, update, context):
         chat_id = update.message.chat_id
         bot = context.bot
-        projects = [project for project in self.context.config["gitlab-projects"]
+        projects = [
+            project
+            for project in self.context.config["gitlab-projects"]
             if (
                 project["token"] in self.context.table
                 and chat_id in self.context.table[project["token"]]
@@ -502,11 +536,13 @@ class Bot:
         if len(projects) == 0:
             message += "There is no project"
         for project in projects:
-            message += project["name"] + "(" + str(self.context.table[project["token"]][chat_id]) +  ")\n"
-        bot.send_message(
-            chat_id=chat_id,
-            text=message
-        )
+            message += (
+                project["name"]
+                + "("
+                + str(self.context.table[project["token"]][chat_id])
+                + ")\n"
+            )
+        bot.send_message(chat_id=chat_id, text=message)
 
 
 def get_RequestHandler(bot, context):
@@ -558,9 +594,7 @@ def get_RequestHandler(bot, context):
                     logging.error("No handler for the event " + type)
                     self._set_headers(404)
             else:
-                logging.warn(
-                    "Unauthorized project : token not in config.json"
-                )
+                logging.warn("Unauthorized project : token not in config.json")
                 self._set_headers(403)
 
     return RequestHandler
@@ -612,7 +646,7 @@ class AppDaemon(Daemon):
 
 def main():
     arguments = docopt(__doc__, version="Gitlab-webhook-telegram 1.1")
-    directory = os.getenv('GWT_DIR', "./")
+    directory = os.getenv("GWT_DIR", "./")
     if arguments["test"]:
         daemon = AppDaemon("/tmp/gitlab-webhook-telegram.pid", directory, True)
     else:

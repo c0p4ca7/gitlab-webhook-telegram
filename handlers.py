@@ -39,7 +39,9 @@ def tag_handler(data, bot, chats, verbosity):
         verbosity = chat[1]
         message = "New tag or tag removed on project " + data["project"]["name"]
         if verbosity >= VV:
-            message += ". See " + data["project"]["web_url"] + "/tags for more information."
+            message += (
+                ". See " + data["project"]["web_url"] + "/tags for more information."
+            )
         bot.bot.send_message(chat_id=chat[0], text=message)
 
 
@@ -161,7 +163,9 @@ def wiki_event_handler(data, bot, chats, verbosity):
     """
     for chat in chats:
         verbosity = chat[1]
-        message = "New wiki page or wiki page updated on project " + data["project"]["name"]
+        message = (
+            "New wiki page or wiki page updated on project " + data["project"]["name"]
+        )
         if verbosity >= VV:
             message += "\nURL : " + data["wiki"]["web_url"]
         bot.bot.send_message(chat_id=chat[0], text=message)
