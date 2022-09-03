@@ -1,7 +1,7 @@
 FROM python:3.9-alpine3.16
 
 WORKDIR /app
-COPY ["./*.py", "./*.json", "./requirements.txt","./"]
+COPY ["./*.py", "./*.json", "./requirements.txt", "/app/"]
 
 RUN pip install -U pip && \
     pip install -U -r requirements.txt
