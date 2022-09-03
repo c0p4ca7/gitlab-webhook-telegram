@@ -90,10 +90,10 @@ class Context:
         Load the config file and transform it into a python usable var
         """
         try:
-            with open(self.directory + "config.json") as config_file:
+            with open(f"{self.directory}config.json") as config_file:
                 self.config = json.load(config_file)
         except Exception as e:
-            print("Impossible to read config.json file. Exception follows")
+            print(f"Unable to read {self.directory}config.json. Exception follows")
             print(str(e))
             sys.exit()
 
@@ -108,7 +108,7 @@ class Context:
             )
         ):
             print(
-                "config.json seems to be corrupted. Compare with config.json.example."
+                f"{self.directory}config.json seems to be misconfigured, please follow the README instructions."
             )
             sys.exit()
 
@@ -127,7 +127,7 @@ class Context:
             self.verified_chats = []
         except Exception as e:
             logging.critical(
-                "Impossible to read verified_chats.json file. Exception follows"
+                f"Unable to read {self.directory}verified_chats.json. Exception follows"
             )
             logging.critical(str(e))
             sys.exit()
@@ -146,7 +146,7 @@ class Context:
             self.table = {}
         except Exception as e:
             logging.critical(
-                "Impossible to read chats_projects.json file. Exception follows"
+                f"Unable to read {self.directory}chats_projects.json. Exception follows"
             )
             logging.critical(str(e))
             sys.exit()
@@ -236,19 +236,19 @@ class Bot:
         if chat_id in self.context.verified_chats:
             bot.send_message(
                 chat_id=chat_id,
-                text="Since your chat is already verified, you can see what you can do here by typing /help",
+                text="Since your chat is already verified, send /help to see the available commands.",
             )
         elif not self.context.config["passphrase"]:
             self.context.verified_chats.append(chat_id)
             self.context.write_verified_chats()
             bot.send_message(
                 chat_id=chat_id,
-                text="Your chat is now verified, you can see what you can do here by typing /help",
+                text="Your chat is now verified, send /help to see the available commands.",
             )
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="First things first : you need to verify this chat. Just send me the passphrase",
+                text="First things first : you need to verify this chat. Just send me the passphrase.",
             )
             self.context.wait_for_verification = True
 
@@ -481,7 +481,7 @@ class Bot:
                 self.context.write_verified_chats()
                 bot.send_message(
                     chat_id=update.message.chat_id,
-                    text="Thank you, your user ID is now verified.",
+                    text="Thank you, your user ID is now verified. Send /help to see the available commands.",
                 )
                 self.context.wait_for_verification = False
             else:
@@ -501,7 +501,7 @@ class Bot:
         message += "/addProject : add a project in this chat\n"
         message += "/removeProject : remove a project from this chat\n"
         message += "/changeVerbosity : change the level of information of a chat\n"
-        message += "/help : Display this message"
+        message += "/help : display this message"
         bot.send_message(chat_id=update.message.chat_id, text=message)
 
     def list_projects(self, update, context):
@@ -572,13 +572,13 @@ def get_RequestHandler(bot, context):
                         HANDLERS[type](body, bot, chats)
                         self._set_headers(200)
                     else:
-                        logging.warn("No chats.")
+                        logging.warning("No chats.")
                         self._set_headers(200)
                 else:
                     logging.error("No handler for the event " + type)
                     self._set_headers(404)
             else:
-                logging.warn("Unauthorized project : token not in config.json")
+                logging.warning("Unauthorized project : token not in config.json")
                 self._set_headers(403)
 
     return RequestHandler
