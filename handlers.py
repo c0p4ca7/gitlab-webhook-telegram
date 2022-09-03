@@ -28,7 +28,7 @@ def push_handler(data, bot, chats):
             if verbosity >= VV:
                 message += "\nUrl : " + commit["url"]
 
-            bot.bot.send_message(chat_id=chat[0], text=message)
+            bot.send_message(chat_id=chat[0], message=message)
 
 
 def tag_handler(data, bot, chats):
@@ -42,7 +42,7 @@ def tag_handler(data, bot, chats):
             message += (
                 ". See " + data["project"]["web_url"] + "/tags for more information."
             )
-        bot.bot.send_message(chat_id=chat[0], text=message)
+        bot.send_message(chat_id=chat[0], message=message)
 
 
 def issue_handler(data, bot, chats):
@@ -75,7 +75,7 @@ def issue_handler(data, bot, chats):
             due_date = oa["due_date"]
             if due_date:
                 message += "\nDue date : " + due_date
-        bot.bot.send_message(chat_id=chat[0], text=message)
+        bot.send_message(chat_id=chat[0], message=message)
 
 
 def note_handler(data, bot, chats):
@@ -102,7 +102,7 @@ def note_handler(data, bot, chats):
         message += "\nNote : " + data["object_attributes"]["note"]
         if verbosity >= VV:
             message += "\nURL : " + data["object_attributes"]["url"]
-        bot.bot.send_message(chat_id=chat[0], text=message)
+        bot.send_message(chat_id=chat[0], message=message)
 
 
 def merge_request_handler(data, bot, chats):
@@ -135,7 +135,7 @@ def merge_request_handler(data, bot, chats):
                 message += "\nAssignee : " + data["assignee"]["username"]
         if verbosity >= VV:
             message += "\nURL : " + oa["url"]
-        bot.bot.send_message(chat_id=chat[0], text=message)
+        bot.send_message(chat_id=chat[0], message=message)
 
 
 def job_event_handler(data, bot, chats):
@@ -154,7 +154,7 @@ def job_event_handler(data, bot, chats):
         )
         if verbosity >= VV:
             message += "\nURL : " + data["repository"]["homepage"] + "/-/jobs"
-        bot.bot.send_message(chat_id=chat[0], text=message)
+        bot.send_message(chat_id=chat[0], message=message)
 
 
 def wiki_event_handler(data, bot, chats):
@@ -168,7 +168,7 @@ def wiki_event_handler(data, bot, chats):
         )
         if verbosity >= VV:
             message += "\nURL : " + data["wiki"]["web_url"]
-        bot.bot.send_message(chat_id=chat[0], text=message)
+        bot.send_message(chat_id=chat[0], message=message)
 
 
 def pipeline_handler(data, bot, chats):
@@ -185,4 +185,4 @@ def pipeline_handler(data, bot, chats):
         )
         if verbosity >= VV:
             message += "\nURL : " + data["project"]["web_url"] + "/pipelines"
-        bot.bot.send_message(chat_id=chat[0], text=message)
+        bot.send_message(chat_id=chat[0], message=message)

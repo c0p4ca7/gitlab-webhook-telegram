@@ -7,6 +7,7 @@ import logging
 import os
 import socketserver
 import sys
+import time
 from http.server import BaseHTTPRequestHandler
 
 import telegram
@@ -67,8 +68,14 @@ VERBOSITIES = [
         VV,
         "Print all except issues descriptions, assignees, due dates and labels and reduce commit messages to 1 line",
     ),
-    (VVV, "Print all but issues descriptions and reduce commit messages to 1 line"),
-    (VVVV, "Print all"),
+    (
+        VVV,
+        "Print all but issues descriptions and reduce commit messages to 1 line",
+    ),
+    (
+        VVVV,
+        "Print all",
+    ),
 ]
 
 
@@ -217,12 +224,31 @@ class Bot:
 
         self.updater.start_polling()
 
-    def send_message_to_list(self, list, message):
+    def send_message(self, chat_id, message):
         """
-        Send a message to all chat in list
+        Send a message to a chat ID, split long text in multiple messages
         """
-        for id in list:
-            self.bot.send_message(id, message)
+        max_message_length = 4096
+        if len(message) <= max_message_length:
+            self.bot.send_message(chat_id, message)
+            return
+        parts = []
+        while len(message) > 0:
+            if len(message) > max_message_length:
+                part = message[:max_message_length]
+                first_lnbr = part.rfind("\n")
+                if first_lnbr != -1:
+                    parts.append(part[:first_lnbr])
+                    message = message[first_lnbr:]
+                else:
+                    parts.append(part)
+                    message = message[max_message_length:]
+            else:
+                parts.append(message)
+                break
+        for part in parts:
+            self.bot.send_message(chat_id=chat_id, text=part)
+            time.sleep(0.25)
 
     def start(self, update, context):
         """
