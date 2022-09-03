@@ -4,6 +4,5 @@
     "telegram-token": "",
     "passphrase": "Here we go !",
     "gitlab-projects": [],
-    "log-file": "./gwt.log",
     "log-level": "warning"
 }

@@ -1,12 +1,6 @@
 """
 Gitlab-webhook-telegram
 
-Usage:
-    main.py start
-    main.py stop
-    main.py restart
-    main.py test
-
 Options:
     -v --version    Show version
     -h --help       Display this screen
@@ -16,12 +10,9 @@ import logging
 import os
 import socketserver
 import sys
-import time
 from http.server import BaseHTTPRequestHandler
-from logging.handlers import RotatingFileHandler
 
 import telegram
-from docopt import docopt
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
@@ -31,7 +22,6 @@ from telegram.ext import (
 )
 
 import handlers
-from daemon import Daemon
 
 """
 Here comes constant definitions
@@ -118,7 +108,6 @@ class Context:
                 "telegram-token",
                 "passphrase",
                 "gitlab-projects",
-                "log-file",
                 "log-level",
             )
         ):
@@ -127,22 +116,19 @@ class Context:
             )
             sys.exit()
 
-        numeric_level = getattr(logging, self.config["log-level"], None)
-        if self.print_log:
-            logging.basicConfig(
-                level=numeric_level, format="%(asctime)s - %(levelname)s - %(message)s"
-            )
-        else:
-            logging.basicConfig(
-                filename=self.config["log-file"],
-                filemode="w",
-                level=numeric_level,
-                format="%(asctime)s - %(levelname)s - %(message)s",
-            )
+        logging.basicConfig(
+            level=self.config["log-level"],
+            format="%(asctime)s - %(levelname)s - %(message)s",
+        )
 
         try:
-            with open(self.directory + "verified_chats.json") as verified_chats_file:
+            with open(f"{self.directory}verified_chats.json") as verified_chats_file:
                 self.verified_chats = json.load(verified_chats_file)
+        except FileNotFoundError:
+            logging.warning(
+                f"File {self.directory}verified_chats.json not found. Assuming empty"
+            )
+            self.verified_chats = []
         except Exception as e:
             logging.critical(
                 "Impossible to read verified_chats.json file. Exception follows"
@@ -150,13 +136,18 @@ class Context:
             logging.critical(str(e))
             sys.exit()
         try:
-            with open(self.directory + "chats_projects.json") as table_file:
+            with open(f"{self.directory}chats_projects.json") as table_file:
                 self.table = {}
                 tmp = json.load(table_file)
                 for token in tmp:
                     self.table[token] = {}
                     for chat_id in tmp[token]:
                         self.table[token][int(chat_id)] = tmp[token][chat_id]
+        except FileNotFoundError:
+            logging.warning(
+                f"File {self.directory}chats_projects.json not found. Assuming empty"
+            )
+            self.table = {}
         except Exception as e:
             logging.critical(
                 "Impossible to read chats_projects.json file. Exception follows"
@@ -169,14 +160,14 @@ class Context:
         """
         Save the verified chats file
         """
-        with open(self.directory + "verified_chats.json", "w") as outfile:
+        with open(self.directory + "verified_chats.json", "w+") as outfile:
             json.dump(self.verified_chats, outfile)
 
     def write_table(self):
         """
         Save the verified chats file
         """
-        with open(self.directory + "chats_projects.json", "w") as outfile:
+        with open(self.directory + "chats_projects.json", "w+") as outfile:
             json.dump(self.table, outfile)
 
     def is_authorized_project(self, token):
@@ -289,6 +280,7 @@ class Bot:
                 ]
                 if len(projects) > 0:
                     for project in projects:
+                        print(project)
                         inline_keyboard.append(
                             [
                                 telegram.InlineKeyboardButton(
@@ -600,20 +592,19 @@ def get_RequestHandler(bot, context):
     return RequestHandler
 
 
-class AppDaemon(Daemon):
+class App:
     """
-    A class to daemonize the app.
+    A class to run the app.
     Override init and run command
     """
 
-    def __init__(self, pidfile, directory, print_log, *args, **kwargs):
+    def __init__(self, directory, print_log, *args, **kwargs):
         self.directory = directory
         self.print_log = print_log
-        super(AppDaemon, self).__init__(pidfile, *args, **kwargs)
 
     def run(self):
         """
-        run is called when the daemon starts or restarts
+        run is called when the app starts
         """
         context = Context(self.directory, self.print_log)
         context.get_config()
@@ -621,7 +612,7 @@ class AppDaemon(Daemon):
         logging.info(
             "config.json, chats_projects.json and verified_chats.json found. Using them for configuration."
         )
-        logging.info("Getting bot with token " + context.config["telegram-token"])
+        logging.debug("Getting bot with token " + context.config["telegram-token"])
         try:
             bot = Bot(context.config["telegram-token"], context)
             logging.info("Bot " + bot.username + " grabbed. Let's go.")
@@ -645,20 +636,9 @@ class AppDaemon(Daemon):
 
 
 def main():
-    arguments = docopt(__doc__, version="Gitlab-webhook-telegram 1.1")
     directory = os.getenv("GWT_DIR", "./")
-    if arguments["test"]:
-        daemon = AppDaemon("/tmp/gitlab-webhook-telegram.pid", directory, True)
-    else:
-        daemon = AppDaemon("/tmp/gitlab-webhook-telegram.pid", directory, False)
-    if arguments["start"]:
-        daemon.start()
-    elif arguments["stop"]:
-        daemon.stop()
-    elif arguments["restart"]:
-        daemon.restart()
-    elif arguments["test"]:
-        daemon.run()
+    app = App(directory, True)
+    app.run()
 
 
 if __name__ == "__main__":
