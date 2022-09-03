@@ -627,7 +627,7 @@ class App:
 
 
 def main():
-    directory = os.getenv("GWT_DIR", "./")
+    directory = os.getenv("GWT_DIR", "./configs/")
     app = App(directory)
     app.run()
 

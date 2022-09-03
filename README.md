@@ -40,7 +40,7 @@ python -m pip install -U -r requirements.txt
 First copy example configuration files where the app is installed
 
 ```bash
-cp config.json.example config.json
+cp config.json.example configs/config.json
 ```
 
 > Note : if you want to have the configuration files elsewhere (in `/etc/gwt/` for example), expose the `GWT_DIR` variable, example:
@@ -79,7 +79,7 @@ More information on the log levels : https://docs.python.org/fr/3/howto/logging.
 
 A working `config.json` example :
 
-````json
+```json
 {
   "port": 8080,
   "telegram-token": "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
@@ -93,22 +93,26 @@ A working `config.json` example :
     {
       "name": "Another project",
       "token": "G4oJnAm9ljWksgfjGTnUcUguv6WvkF",
-      "user-ids": ["000000001","000000002"]
+      "user-ids": ["000000001", "000000002"]
     }
   ],
   "log-level": "INFO"
 }
-
+```
 
 ### 4) Run the app
 
-You can start the server with the
+You can start the server for testing with the following command:
 
 ```bash
 python main.py
-````
+```
 
-You can then test the bot by interaging with i on messenger and use the test button on the gitlab interface.
+When you're ready, you can build and start the docker container with the following command:
+
+```bash
+docker compose up -d --build
+```
 
 ## How to use the bot
 

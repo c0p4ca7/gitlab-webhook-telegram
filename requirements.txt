@@ -1,10 +1,1 @@
-certifi==2022.6.15
-cffi==1.15.1
-cryptography==37.0.4
-decorator==5.1.1
-docopt==0.6.2
-future==0.18.2
-pycparser==2.21
 python-telegram-bot==13.13
-six==1.16.0
-tornado==6.2

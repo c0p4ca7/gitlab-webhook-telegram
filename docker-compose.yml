@@ -1,0 +1,13 @@
+---
+version: '3.9'
+
+services:
+  gitlab-webhook-telegram:
+    build: .
+    environment:
+      - TZ=Europe/Paris
+    ports:
+      - 10111:8000
+    volumes:
+      - ./configs:/app/configs
+    restart: unless-stopped
