@@ -10,44 +10,40 @@ VVVV = 3
 
 def push_handler(data, bot, chats):
     """
-    Defines the handler for a commit and push event
+    Defines the handler for when a commit event is received
     """
     for chat in chats:
         verbosity = chat[1]
         for commit in data["commits"]:
-            message = (
-                "New commit on project "
-                + data["project"]["name"]
-                + "\nAuthor : "
-                + commit["author"]["name"]
-            )
+            message = f'New commit on project {data["project"]["name"]}'
+            message += f'\nAuthor : {commit["author"]["name"]}'
             if verbosity != VVVV:
                 message += "\nMessage: " + commit["message"].partition("\n")[0]
             else:
-                message += "\nMessage: " + commit["message"]
+                message += f'\nMessage: {commit["message"]}'
             if verbosity >= VV:
-                message += "\nUrl : " + commit["url"]
+                message += f'\nUrl : {commit["url"]}'
 
             bot.send_message(chat_id=chat[0], message=message)
 
 
 def tag_handler(data, bot, chats):
     """
-    Defines the handler for when tags ar pushed
+    Defines the handler for when a tag event is received
     """
     for chat in chats:
         verbosity = chat[1]
-        message = "New tag or tag removed on project " + data["project"]["name"]
+        message = f'New tag event on project {data["project"]["name"]}'
         if verbosity >= VV:
             message += (
-                ". See " + data["project"]["web_url"] + "/tags for more information."
+                f'\nURL : {data["project"]["web_url"]}/-/{data["ref"].lstrip("refs/")}'
             )
         bot.send_message(chat_id=chat[0], message=message)
 
 
 def issue_handler(data, bot, chats):
     """
-    Defines the handler for when a issue is created or changed
+    Defines the handler for when an issue event is received
     """
     for chat in chats:
         verbosity = chat[1]
@@ -56,31 +52,32 @@ def issue_handler(data, bot, chats):
         if oa["confidential"]:
             message += "[confidential] "
         message += (
-            "New issue or issue updated"
+            "New issue event"
             + " on project "
             + data["project"]["name"]
             + "\nTitle : "
             + oa["title"]
         )
         if verbosity >= VVVV and oa["description"]:
-            message += "\nDescription : " + oa["description"]
-        message += "\nState : " + oa["state"] + "\nURL : " + oa["url"]
+            message += f'\nDescription : {oa["description"]}'
+        message += f'\nState : {oa["state"]}'
+        message += f'\nURL : {oa["url"]}'
         if verbosity >= VVV:
             if "assignees" in data:
                 assignees = ", ".join([x["name"] for x in data["assignees"]])
-                message += "\nAssignee(s) : " + assignees
+                message += f"\nAssignee(s) : {assignees}"
             labels = ", ".join([x["title"] for x in data["labels"]])
             if labels:
-                message += "\nLabels : " + labels
+                message += f"\nLabels : {labels}"
             due_date = oa["due_date"]
             if due_date:
-                message += "\nDue date : " + due_date
+                message += f"\nDue date : {due_date}"
         bot.send_message(chat_id=chat[0], message=message)
 
 
 def note_handler(data, bot, chats):
     """
-    Defines the handler for a note (create or update) on commit, merge request, issue or snippet
+    Defines the handler for when a note event is received
     """
     for chat in chats:
         verbosity = chat[1]
@@ -97,92 +94,77 @@ def note_handler(data, bot, chats):
         else:
             message += "snippet "
             info = "\nSnippet : " + data["snippet"]["title"]
-        message += "on project " + data["project"]["name"]
+        message += f'on project {data["project"]["name"]}'
         message += info
-        message += "\nNote : " + data["object_attributes"]["note"]
+        message += f'\nNote : {data["object_attributes"]["note"]}'
         if verbosity >= VV:
-            message += "\nURL : " + data["object_attributes"]["url"]
+            message += f'\nURL : {data["object_attributes"]["url"]}'
         bot.send_message(chat_id=chat[0], message=message)
 
 
 def merge_request_handler(data, bot, chats):
     """
-    Defines the handler for when a merge request is created or updated
+    Defines the handler for when a merge request event is received
     """
     for chat in chats:
         verbosity = chat[1]
         oa = data["object_attributes"]
-        message = (
-            "New merge request or merge request updated"
-            + " on project "
-            + data["project"]["name"]
-            + "\nTitle : "
-            + oa["title"]
-            + "\nSource branch : "
-            + oa["source_branch"]
-            + "\nTarget branch : "
-            + oa["target_branch"]
-            + "\nMerge status : "
-            + oa["merge_status"]
-            + "\nState : "
-            + oa["state"]
-        )
+        message = f'New merge request event on project {data["project"]["name"]}'
+        message += f'\nTitle : {oa["title"]}'
+        message += f'\nSource branch : {oa["source_branch"]}'
+        message += f'\nTarget branch : {oa["target_branch"]}'
+        message += f'\nMerge status : {oa["merge_status"]}'
+        message += f'\nState : {oa["state"]}'
         if verbosity >= VVV:
             labels = ", ".join([x["title"] for x in data["labels"]])
             if labels:
-                message += "\nLabels : " + labels
+                message += f"\nLabels : {labels}"
             if "assignee" in data:
-                message += "\nAssignee : " + data["assignee"]["username"]
+                message += f'\nAssignee : {data["assignee"]["username"]}'
         if verbosity >= VV:
-            message += "\nURL : " + oa["url"]
+            message += f'\nURL : {oa["url"]}'
         bot.send_message(chat_id=chat[0], message=message)
 
 
 def job_event_handler(data, bot, chats):
     """
-    Defines the handler for when a job begin or change
+    Defines the handler for when a job event is received
     """
     for chat in chats:
         verbosity = chat[1]
-        message = (
-            "New job or job updated on project "
-            + data["repository"]["name"]
-            + "\nbuild_status : "
-            + data["build_status"]
-            + "\nEnventual failure reason : "
-            + data["build_failure_reason"]
-        )
+        message = f'New job event on project {data["repository"]["name"]}'
+        message += f'\nJob status : {data["build_status"]}'
+        if data["build_status"] != "success":
+            message += f'\nFailure reason : {data["build_failure_reason"]}'
         if verbosity >= VV:
-            message += "\nURL : " + data["repository"]["homepage"] + "/-/jobs"
+            message += f'\n\nJob name : {data["build_name"]}'
+            message += f'\nJob stage : {data["build_stage"]}'
+            message += (
+                f'\nURL : {data["repository"]["homepage"]}/-/jobs/{data["build_id"]}'
+            )
         bot.send_message(chat_id=chat[0], message=message)
 
 
 def wiki_event_handler(data, bot, chats):
     """
-    Defines the handler for when a wiki page is created or changed
+    Defines the handler for when a wiki page event is received
     """
     for chat in chats:
         verbosity = chat[1]
-        message = (
-            "New wiki page or wiki page updated on project " + data["project"]["name"]
-        )
+        message = f'New wiki page event on project {data["project"]["name"]}'
         if verbosity >= VV:
-            message += "\nURL : " + data["wiki"]["web_url"]
+            message += f'\nURL : {data["wiki"]["web_url"]}'
         bot.send_message(chat_id=chat[0], message=message)
 
 
 def pipeline_handler(data, bot, chats):
     """
-    Defines the hander for when a pipelin begin or change
+    Defines the hander for when a pipeline event is received
     """
     for chat in chats:
         verbosity = chat[1]
-        message = (
-            "New pipeline or pipeline updated on project "
-            + data["project"]["name"]
-            + "\nStatus : "
-            + data["object_attributes"]["status"]
-        )
+        message = f'New pipeline event on project {data["project"]["name"]}'
+        message += f'\nPipeline status : {data["object_attributes"]["status"]}'
         if verbosity >= VV:
-            message += "\nURL : " + data["project"]["web_url"] + "/pipelines"
+            message += f'\nURL : {data["project"]["web_url"]}/-/pipelines/{data["object_attributes"]["id"]}'
         bot.send_message(chat_id=chat[0], message=message)
