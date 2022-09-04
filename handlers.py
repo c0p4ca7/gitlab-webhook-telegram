@@ -153,7 +153,7 @@ def job_event_handler(data, bot, chats):
         verbosity = chat[1]
         message = f'New job event on project {data["repository"]["name"]}'
         message += f'\nJob status : {data["build_status"]}'
-        if data["build_status"] != "success":
+        if data["build_status"] == "failed":
             message += f'\nFailure reason : {data["build_failure_reason"]}'
         if verbosity >= VV:
             message += f'\n\nJob name : {data["build_name"]}'
