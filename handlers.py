@@ -172,7 +172,8 @@ def job_event_handler(data, bot, chats, project_token):
         [
             [
                 InlineKeyboardButton(
-                    text=STATUSES[data["build_status"]], callback_data="None"
+                    text=STATUSES[data["build_status"]],
+                    url=f'{data["repository"]["homepage"]}/-/jobs/{data["build_id"]}',
                 )
             ]
         ]
@@ -183,9 +184,6 @@ def job_event_handler(data, bot, chats, project_token):
         if chat["verbosity"] >= VV:
             message += f'Job name : {data["build_name"]}\n'
             message += f'Job stage : {data["build_stage"]}\n'
-            message += (
-                f'URL : {data["repository"]["homepage"]}/-/jobs/{data["build_id"]}\n'
-            )
         if "message_id" in bot.context.table[project_token]["jobs"][data["build_id"]]:
             message_id = bot.context.table[project_token]["jobs"][data["build_id"]][
                 "message_id"
