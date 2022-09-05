@@ -2,6 +2,8 @@
 This file defines all the handlers needed by the server
 """
 
+import logging
+
 from emoji import emojize
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -194,6 +196,10 @@ def job_event_handler(data, bot, chats, project_token):
                 bot.bot.edit_message_reply_markup(
                     chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
                 )
+            else:
+                logging.info(
+                    f'WebHook received for Job {data["build_id"]} with unchanged status'
+                )
         else:
             message_id = bot.send_message(
                 chat_id=chat["id"], message=message, markup=reply_markup
@@ -265,6 +271,10 @@ def pipeline_handler(data, bot, chats, project_token):
             if status_changed:
                 bot.bot.edit_message_reply_markup(
                     chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
+                )
+            else:
+                logging.info(
+                    f'WebHook received for Pipeline {data["object_attributes"]["id"]} with unchanged status'
                 )
         else:
             message_id = bot.send_message(
