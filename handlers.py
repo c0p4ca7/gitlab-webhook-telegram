@@ -162,28 +162,22 @@ def job_event_handler(data, bot, chats, project_token):
         bot.context.table[project_token]["jobs"][data["build_id"]]["status"] = data[
             "build_status"
         ]
-        message = f'Job event updated on project {data["repository"]["name"]}\n'
     else:
         bot.context.table[project_token]["jobs"][data["build_id"]] = {
             "status": data["build_status"]
         }
-        message = f'New job event on project {data["repository"]["name"]}\n\n'
+    message = f'<b>Project</b> {data["repository"]["name"]}\n'
+    message += f'<b>Job ID</b> {data["build_id"]}\n\n'
+    url = f'{data["repository"]["homepage"]}/-/jobs/{data["build_id"]}'
     reply_markup = InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton(
-                    text=STATUSES[data["build_status"]],
-                    url=f'{data["repository"]["homepage"]}/-/jobs/{data["build_id"]}',
-                )
-            ]
-        ]
+        [[InlineKeyboardButton(text=STATUSES[data["build_status"]], url=url)]]
     )
     for chat in chats:
-        if data["build_status"] == "failed":
-            message += f'Failure reason : {data["build_failure_reason"]}\n'
         if chat["verbosity"] >= VV:
-            message += f'Job name : {data["build_name"]}\n'
-            message += f'Job stage : {data["build_stage"]}\n'
+            message += f'<b>Job name</b> : {data["build_name"]}\n'
+            message += f'<b>Job stage</b> : {data["build_stage"]}'
+        if data["build_status"] == "failed":
+            message += f'\n\n<b>Failure reason</b> : {data["build_failure_reason"]}\n'
         if "message_id" in bot.context.table[project_token]["jobs"][data["build_id"]]:
             message_id = bot.context.table[project_token]["jobs"][data["build_id"]][
                 "message_id"
@@ -215,9 +209,37 @@ def pipeline_handler(data, bot, chats, project_token):
     """
     Defines the hander for when a pipeline event is received
     """
+    if data["object_attributes"]["id"] in bot.context.table[project_token]["pipelines"]:
+        bot.context.table[project_token]["jobs"][data["object_attributes"]["id"]][
+            "status"
+        ] = data["object_attributes"]["status"]
+    else:
+        bot.context.table[project_token]["jobs"][data["object_attributes"]["id"]] = {
+            "status": data["object_attributes"]["status"]
+        }
+    message = f'<b>Project</b> {data["project"]["name"]}\n'
+    message += f'<b>Pipeline ID</b> {data["object_attributes"]["id"]}\n\n'
+    url = f'{data["project"]["web_url"]}/-/pipelines/{data["object_attributes"]["id"]}'
+    reply_markup = InlineKeyboardMarkup(
+        [[InlineKeyboardButton(text=emojize(":link:"), url=url)]]
+    )
     for chat in chats:
-        message = f'New pipeline event on project {data["project"]["name"]}'
-        message += f'\nPipeline status : {data["object_attributes"]["status"]}'
-        if chat["verbosity"] >= VV:
-            message += f'\nURL : {data["project"]["web_url"]}/-/pipelines/{data["object_attributes"]["id"]}'
-        bot.send_message(chat_id=chat["id"], message=message)
+        if (
+            "message_id"
+            in bot.context.table[project_token]["pipelines"][
+                data["object_attributes"]["id"]
+            ]
+        ):
+            message_id = bot.context.table[project_token]["pipelines"][
+                data["object_attributes"]["id"]
+            ]["message_id"]
+            bot.bot.edit_message_reply_markup(
+                chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
+            )
+        else:
+            message_id = bot.send_message(
+                chat_id=chat["id"], message=message, markup=reply_markup
+            )
+            bot.context.table[project_token]["pipelines"][
+                data["object_attributes"]["id"]
+            ]["message_id"] = message_id

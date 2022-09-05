@@ -244,7 +244,10 @@ class Bot:
         max_message_length = 4096
         if len(message) <= max_message_length:
             message = self.bot.send_message(
-                chat_id=chat_id, text=message, reply_markup=markup
+                chat_id=chat_id,
+                text=message,
+                reply_markup=markup,
+                parse_mode="HTML",
             )
             return message.message_id
         parts = []
@@ -263,7 +266,7 @@ class Bot:
                 break
         for part in parts:
             message = self.bot.send_message(
-                chat_id=chat_id, text=part, reply_markup=markup
+                chat_id=chat_id, text=part, reply_markup=markup, parse_mode="HTML"
             )
             time.sleep(0.25)
         return message.message_id
@@ -557,8 +560,8 @@ class Bot:
         if len(projects) == 0:
             message += "There is no project"
         for id, project in enumerate(projects):
-            message += f'{id+1} - {project["name"]} (Verbosity: {self.context.table[project["token"]][chat_id]["verbosity"]})\n'
-        bot.send_message(chat_id=chat_id, text=message)
+            message += f'{id+1} - <b>{project["name"]}</b> (Verbosity: {self.context.table[project["token"]][chat_id]["verbosity"]})\n'
+        bot.send_message(chat_id=chat_id, text=message, parse_mode="HTML")
 
 
 def get_RequestHandler(bot, context):
