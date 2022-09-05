@@ -12,7 +12,7 @@ import sys
 import time
 from http.server import BaseHTTPRequestHandler
 
-from telegram import (InlineKeyboardButton, InlineKeyboardMarkup)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
@@ -243,7 +243,9 @@ class Bot:
         """
         max_message_length = 4096
         if len(message) <= max_message_length:
-            message = self.bot.send_message(chat_id=chat_id, text=message, reply_markup=markup)
+            message = self.bot.send_message(
+                chat_id=chat_id, text=message, reply_markup=markup
+            )
             return message.message_id
         parts = []
         while len(message) > 0:
@@ -260,7 +262,9 @@ class Bot:
                 parts.append(message)
                 break
         for part in parts:
-            message = self.bot.send_message(chat_id=chat_id, text=part, reply_markup=markup)
+            message = self.bot.send_message(
+                chat_id=chat_id, text=part, reply_markup=markup
+            )
             time.sleep(0.25)
         return message.message_id
 
@@ -324,9 +328,7 @@ class Bot:
                             )
                         ]
                     )
-                replyKeyboard = InlineKeyboardMarkup(
-                    inline_keyboard=inline_keyboard
-                )
+                replyKeyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
                 bot.send_message(
                     chat_id=chat_id,
                     reply_markup=replyKeyboard,
@@ -366,9 +368,7 @@ class Bot:
                             )
                         ]
                     )
-                replyKeyboard = InlineKeyboardMarkup(
-                    inline_keyboard=inline_keyboard
-                )
+                replyKeyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
                 bot.send_message(
                     chat_id=chat_id,
                     reply_markup=replyKeyboard,
@@ -410,9 +410,7 @@ class Bot:
                             )
                         ]
                     )
-                replyKeyboard = InlineKeyboardMarkup(
-                    inline_keyboard=inline_keyboard
-                )
+                replyKeyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
                 bot.send_message(
                     chat_id=chat_id,
                     reply_markup=replyKeyboard,
@@ -483,9 +481,7 @@ class Bot:
                         )
                     ]
                 )
-            replyKeyboard = InlineKeyboardMarkup(
-                inline_keyboard=inline_keyboard
-            )
+            replyKeyboard = InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
             message_verbosities = "Verbosities : \n"
             for verb in VERBOSITIES:
                 message_verbosities += "- " + str(verb[0]) + " : " + verb[1] + "\n"

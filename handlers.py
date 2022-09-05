@@ -2,8 +2,8 @@
 This file defines all the handlers needed by the server
 """
 
-from telegram import (InlineKeyboardButton, InlineKeyboardMarkup)
 from emoji import emojize
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 V = 0
 VV = 1
@@ -168,9 +168,15 @@ def job_event_handler(data, bot, chats, project_token):
             "status": data["build_status"]
         }
         message = f'New job event on project {data["repository"]["name"]}\n\n'
-    reply_markup = InlineKeyboardMarkup([
-        [InlineKeyboardButton(text=STATUSES[data["build_status"]], callback_data="None")]
-    ])
+    reply_markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    text=STATUSES[data["build_status"]], callback_data="None"
+                )
+            ]
+        ]
+    )
     for chat in chats:
         if data["build_status"] == "failed":
             message += f'Failure reason : {data["build_failure_reason"]}\n'
@@ -181,13 +187,19 @@ def job_event_handler(data, bot, chats, project_token):
                 f'URL : {data["repository"]["homepage"]}/-/jobs/{data["build_id"]}\n'
             )
         if "message_id" in bot.context.table[project_token]["jobs"][data["build_id"]]:
-            message_id = bot.context.table[project_token]["jobs"][data["build_id"]]["message_id"]
-            bot.bot.edit_message_reply_markup(chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup)
+            message_id = bot.context.table[project_token]["jobs"][data["build_id"]][
+                "message_id"
+            ]
+            bot.bot.edit_message_reply_markup(
+                chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
+            )
         else:
             message_id = bot.send_message(
                 chat_id=chat["id"], message=message, markup=reply_markup
             )
-            bot.context.table[project_token]["jobs"][data["build_id"]]["message_id"] = message_id
+            bot.context.table[project_token]["jobs"][data["build_id"]][
+                "message_id"
+            ] = message_id
 
 
 def wiki_event_handler(data, bot, chats, project_token):
