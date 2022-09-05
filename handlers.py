@@ -158,10 +158,18 @@ def job_event_handler(data, bot, chats, project_token):
     """
     Defines the handler for when a job event is received
     """
+    status_changed = True
     if data["build_id"] in bot.context.table[project_token]["jobs"]:
-        bot.context.table[project_token]["jobs"][data["build_id"]]["status"] = data[
-            "build_status"
-        ]
+        if (
+            "status" in bot.context.table[project_token]["jobs"][data["build_id"]]
+            and bot.context.table[project_token]["jobs"][data["build_id"]]["status"]
+            == data["build_status"]
+        ):
+            status_changed = False
+        if status_changed:
+            bot.context.table[project_token]["jobs"][data["build_id"]]["status"] = data[
+                "build_status"
+            ]
     else:
         bot.context.table[project_token]["jobs"][data["build_id"]] = {
             "status": data["build_status"]
@@ -182,9 +190,10 @@ def job_event_handler(data, bot, chats, project_token):
             message_id = bot.context.table[project_token]["jobs"][data["build_id"]][
                 "message_id"
             ]
-            bot.bot.edit_message_reply_markup(
-                chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
-            )
+            if status_changed:
+                bot.bot.edit_message_reply_markup(
+                    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
+                )
         else:
             message_id = bot.send_message(
                 chat_id=chat["id"], message=message, markup=reply_markup
@@ -209,10 +218,23 @@ def pipeline_handler(data, bot, chats, project_token):
     """
     Defines the hander for when a pipeline event is received
     """
+    status_changed = True
     if data["object_attributes"]["id"] in bot.context.table[project_token]["pipelines"]:
-        bot.context.table[project_token]["pipelines"][data["object_attributes"]["id"]][
+        if (
             "status"
-        ] = data["object_attributes"]["status"]
+            in bot.context.table[project_token]["pipelines"][
+                data["object_attributes"]["id"]
+            ]
+            and bot.context.table[project_token]["pipelines"][
+                data["object_attributes"]["id"]
+            ]["status"]
+            == data["object_attributes"]["status"]
+        ):
+            status_changed = False
+        if status_changed:
+            bot.context.table[project_token]["pipelines"][
+                data["object_attributes"]["id"]
+            ]["status"] = data["object_attributes"]["status"]
     else:
         bot.context.table[project_token]["pipelines"][
             data["object_attributes"]["id"]
@@ -240,9 +262,10 @@ def pipeline_handler(data, bot, chats, project_token):
             message_id = bot.context.table[project_token]["pipelines"][
                 data["object_attributes"]["id"]
             ]["message_id"]
-            bot.bot.edit_message_reply_markup(
-                chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
-            )
+            if status_changed:
+                bot.bot.edit_message_reply_markup(
+                    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
+                )
         else:
             message_id = bot.send_message(
                 chat_id=chat["id"], message=message, markup=reply_markup
