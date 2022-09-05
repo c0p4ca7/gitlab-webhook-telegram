@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Gitlab-webhook-telegram
 """
@@ -10,7 +12,7 @@ import sys
 import time
 from http.server import BaseHTTPRequestHandler
 
-import telegram
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup)
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
@@ -161,6 +163,15 @@ class Context:
             sys.exit()
         return self.config, self.verified_chats, self.table
 
+    def migrate_table_config(self):
+        """
+        Add missing keys to table config file if needed
+        """
+        for token in self.table:
+            if "jobs" not in self.table[token]:
+                self.table[token]["jobs"] = {}
+        return self.table
+
     def write_verified_chats(self):
         """
         Save the verified chats file
@@ -226,14 +237,14 @@ class Bot:
 
         self.updater.start_polling()
 
-    def send_message(self, chat_id, message):
+    def send_message(self, chat_id, message, markup=None):
         """
         Send a message to a chat ID, split long text in multiple messages
         """
         max_message_length = 4096
         if len(message) <= max_message_length:
-            self.bot.send_message(chat_id, message)
-            return
+            message = self.bot.send_message(chat_id=chat_id, text=message, reply_markup=markup)
+            return message.message_id
         parts = []
         while len(message) > 0:
             if len(message) > max_message_length:
@@ -249,8 +260,9 @@ class Bot:
                 parts.append(message)
                 break
         for part in parts:
-            self.bot.send_message(chat_id=chat_id, text=part)
+            message = self.bot.send_message(chat_id=chat_id, text=part, reply_markup=markup)
             time.sleep(0.25)
+        return message.message_id
 
     def start(self, update, context):
         """
@@ -307,12 +319,12 @@ class Bot:
                 for project in projects:
                     inline_keyboard.append(
                         [
-                            telegram.InlineKeyboardButton(
+                            InlineKeyboardButton(
                                 text=project["name"], callback_data=project["token"]
                             )
                         ]
                     )
-                replyKeyboard = telegram.InlineKeyboardMarkup(
+                replyKeyboard = InlineKeyboardMarkup(
                     inline_keyboard=inline_keyboard
                 )
                 bot.send_message(
@@ -349,12 +361,12 @@ class Bot:
                 for project in projects:
                     inline_keyboard.append(
                         [
-                            telegram.InlineKeyboardButton(
+                            InlineKeyboardButton(
                                 text=project["name"], callback_data=project["token"]
                             )
                         ]
                     )
-                replyKeyboard = telegram.InlineKeyboardMarkup(
+                replyKeyboard = InlineKeyboardMarkup(
                     inline_keyboard=inline_keyboard
                 )
                 bot.send_message(
@@ -393,12 +405,12 @@ class Bot:
                 for project in projects:
                     inline_keyboard.append(
                         [
-                            telegram.InlineKeyboardButton(
+                            InlineKeyboardButton(
                                 text=project["name"], callback_data=project["token"]
                             )
                         ]
                     )
-                replyKeyboard = telegram.InlineKeyboardMarkup(
+                replyKeyboard = InlineKeyboardMarkup(
                     inline_keyboard=inline_keyboard
                 )
                 bot.send_message(
@@ -432,7 +444,7 @@ class Bot:
             else:
                 if token not in self.context.table:
                     self.context.table[token] = {}
-                self.context.table[token][chat_id] = VVVV
+                self.context.table[token][chat_id]["verbosity"] = VVVV
                 self.context.write_table()
                 bot.edit_message_text(
                     text="The project was successfully added.",
@@ -466,12 +478,12 @@ class Bot:
             for i, verbosity in enumerate(VERBOSITIES):
                 inline_keyboard.append(
                     [
-                        telegram.InlineKeyboardButton(
+                        InlineKeyboardButton(
                             text=str(i) + ":" + verbosity[1], callback_data=i + 1
                         )
                     ]
                 )
-            replyKeyboard = telegram.InlineKeyboardMarkup(
+            replyKeyboard = InlineKeyboardMarkup(
                 inline_keyboard=inline_keyboard
             )
             message_verbosities = "Verbosities : \n"
@@ -487,7 +499,9 @@ class Bot:
             chat_id = query.message.chat_id
             self.context.button_mode = MODE_NONE
             verbosity = int(query.data) - 1
-            self.context.table[self.context.selected_project][chat_id] = verbosity
+            self.context.table[self.context.selected_project][chat_id][
+                "verbosity"
+            ] = verbosity
             self.context.write_table()
             bot.edit_message_text(
                 chat_id=chat_id,
@@ -547,13 +561,7 @@ class Bot:
         if len(projects) == 0:
             message += "There is no project"
         for id, project in enumerate(projects):
-            message += (
-                f"{id+1} - "
-                + project["name"]
-                + " (Verbosity: "
-                + str(self.context.table[project["token"]][chat_id])
-                + ")\n"
-            )
+            message += f'{id+1} - {project["name"]} (Verbosity: {self.context.table[project["token"]][chat_id]["verbosity"]})\n'
         bot.send_message(chat_id=chat_id, text=message)
 
 
@@ -593,11 +601,16 @@ def get_RequestHandler(bot, context):
                 if type in HANDLERS:
                     if token in self.context.table and self.context.table[token]:
                         chats = [
-                            (chat, self.context.table[token][chat])
+                            {
+                                "id": chat,
+                                "verbosity": self.context.table[token][chat][
+                                    "verbosity"
+                                ],
+                            }
                             for chat in self.context.table[token]
                             if chat in self.context.verified_chats
                         ]
-                        HANDLERS[type](body, bot, chats)
+                        HANDLERS[type](body, bot, chats, token)
                         self._set_headers(200)
                     else:
                         logging.warning("No chats.")
@@ -627,6 +640,7 @@ class App:
         """
         context = Context(self.directory)
         context.get_config()
+        context.migrate_table_config()
         logging.info("Starting gitlab-webhook-telegram app")
         logging.info(
             "config.json, chats_projects.json and verified_chats.json found. Using them for configuration."
