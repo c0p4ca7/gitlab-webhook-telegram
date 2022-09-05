@@ -210,18 +210,25 @@ def pipeline_handler(data, bot, chats, project_token):
     Defines the hander for when a pipeline event is received
     """
     if data["object_attributes"]["id"] in bot.context.table[project_token]["pipelines"]:
-        bot.context.table[project_token]["jobs"][data["object_attributes"]["id"]][
+        bot.context.table[project_token]["pipelines"][data["object_attributes"]["id"]][
             "status"
         ] = data["object_attributes"]["status"]
     else:
-        bot.context.table[project_token]["jobs"][data["object_attributes"]["id"]] = {
-            "status": data["object_attributes"]["status"]
-        }
+        bot.context.table[project_token]["pipelines"][
+            data["object_attributes"]["id"]
+        ] = {"status": data["object_attributes"]["status"]}
     message = f'<b>Project</b> {data["project"]["name"]}\n'
     message += f'<b>Pipeline ID</b> {data["object_attributes"]["id"]}\n\n'
+    message += f'<b>Commit title</b> {data["commit"]["title"]}\n'
     url = f'{data["project"]["web_url"]}/-/pipelines/{data["object_attributes"]["id"]}'
     reply_markup = InlineKeyboardMarkup(
-        [[InlineKeyboardButton(text=emojize(":link:"), url=url)]]
+        [
+            [
+                InlineKeyboardButton(
+                    text=STATUSES[data["object_attributes"]["status"]], url=url
+                )
+            ]
+        ]
     )
     for chat in chats:
         if (

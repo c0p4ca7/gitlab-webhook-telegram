@@ -168,8 +168,10 @@ class Context:
         Add missing keys to table config file if needed
         """
         for token in self.table:
-            if "jobs" not in self.table[token]:
-                self.table[token]["jobs"] = {}
+            for kind in ("jobs", "pipelines"):
+                if kind not in self.table[token]:
+                    self.table[token][kind] = {}
+                    logging.info(f"'{kind}' key missing from table, adding now")
         return self.table
 
     def write_verified_chats(self):
