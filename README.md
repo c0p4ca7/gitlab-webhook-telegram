@@ -1,5 +1,7 @@
 # Gitlab-webhook-telegram
 
+> Original project from [nanoy42/gitlab-webhook-telegram](https://github.com/nanoy42/gitlab-webhook-telegram)
+
 ## What can GWT do for you ?
 
 Gwt is a simple python server triggered by gitlab webhooks which trigger messages on telegram via a bot.
