@@ -3,9 +3,12 @@ This file defines all the handlers needed by the server
 """
 
 import logging
+from typing import List
 
 from emoji import emojize
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+from classes.bot import Bot
 
 V = 0
 VV = 1
@@ -27,7 +30,7 @@ STATUSES = {
 }
 
 
-def push_handler(data, bot, chats, project_token):
+def push_handler(data: dict, bot: Bot, chats: List[int], project_token: str) -> None:
     """
     Defines the handler for when a commit event is received
     """
@@ -47,7 +50,7 @@ def push_handler(data, bot, chats, project_token):
             bot.send_message(chat_id=chat["id"], message=message)
 
 
-def tag_handler(data, bot, chats, project_token):
+def tag_handler(data: dict, bot: Bot, chats: List[int], project_token: str) -> None:
     """
     Defines the handler for when a tag event is received
     """
@@ -61,7 +64,7 @@ def tag_handler(data, bot, chats, project_token):
         bot.send_message(chat_id=chat["id"], message=message)
 
 
-def release_handler(data, bot, chats, project_token):
+def release_handler(data: dict, bot: Bot, chats: List[int], project_token: str) -> None:
     """
     Defines the handler for when a release event is received
     """
@@ -77,7 +80,7 @@ def release_handler(data, bot, chats, project_token):
         bot.send_message(chat_id=chat["id"], message=message)
 
 
-def issue_handler(data, bot, chats, project_token):
+def issue_handler(data: dict, bot: Bot, chats: List[int], project_token: str) -> None:
     """
     Defines the handler for when an issue event is received
     """
@@ -105,7 +108,7 @@ def issue_handler(data, bot, chats, project_token):
         bot.send_message(chat_id=chat["id"], message=message)
 
 
-def note_handler(data, bot, chats, project_token):
+def note_handler(data: dict, bot: Bot, chats: List[int], project_token: str) -> None:
     """
     Defines the handler for when a note event is received
     """
@@ -133,7 +136,9 @@ def note_handler(data, bot, chats, project_token):
         bot.send_message(chat_id=chat["id"], message=message)
 
 
-def merge_request_handler(data, bot, chats, project_token):
+def merge_request_handler(
+    data: dict, bot: Bot, chats: List[int], project_token: str
+) -> None:
     """
     Defines the handler for when a merge request event is received
     """
@@ -156,60 +161,53 @@ def merge_request_handler(data, bot, chats, project_token):
         bot.send_message(chat_id=chat["id"], message=message)
 
 
-def job_event_handler(data, bot, chats, project_token):
+def job_event_handler(
+    data: dict, bot: Bot, chats: List[int], project_token: str
+) -> None:
     """
     Defines the handler for when a job event is received
     """
+    ctx = bot.context.table[project_token]["jobs"]
+    status = data["build_status"]
     status_changed = True
-    if data["build_id"] in bot.context.table[project_token]["jobs"]:
-        if (
-            "status" in bot.context.table[project_token]["jobs"][data["build_id"]]
-            and bot.context.table[project_token]["jobs"][data["build_id"]]["status"]
-            == data["build_status"]
-        ):
+    job_id = data["build_id"]
+    if job_id in ctx:
+        if "status" in ctx[job_id] and ctx[job_id]["status"] == status:
             status_changed = False
         if status_changed:
-            bot.context.table[project_token]["jobs"][data["build_id"]]["status"] = data[
-                "build_status"
-            ]
+            ctx[job_id]["status"] = status
     else:
-        bot.context.table[project_token]["jobs"][data["build_id"]] = {
-            "status": data["build_status"]
-        }
+        ctx[job_id] = {"status": status}
     message = f'<b>Project</b> {data["repository"]["name"]}\n'
-    message += f'<b>Job ID</b> {data["build_id"]}\n\n'
-    url = f'{data["repository"]["homepage"]}/-/jobs/{data["build_id"]}'
+    message += f"<b>Job ID</b> {job_id}\n\n"
+    url = f'{data["repository"]["homepage"]}/-/jobs/{job_id}'
     reply_markup = InlineKeyboardMarkup(
-        [[InlineKeyboardButton(text=STATUSES[data["build_status"]], url=url)]]
+        [[InlineKeyboardButton(text=STATUSES[status], url=url)]]
     )
     for chat in chats:
         if chat["verbosity"] >= VV:
             message += f'<b>Job name</b> : {data["build_name"]}\n'
             message += f'<b>Job stage</b> : {data["build_stage"]}'
-        if data["build_status"] == "failed":
+        if status == "failed":
             message += f'\n\n<b>Failure reason</b> : {data["build_failure_reason"]}\n'
-        if "message_id" in bot.context.table[project_token]["jobs"][data["build_id"]]:
-            message_id = bot.context.table[project_token]["jobs"][data["build_id"]][
-                "message_id"
-            ]
+        if "message_id" in ctx[job_id]:
+            message_id = ctx[job_id]["message_id"]
             if status_changed:
                 bot.bot.edit_message_reply_markup(
                     chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
                 )
             else:
-                logging.info(
-                    f'WebHook received for Job {data["build_id"]} with unchanged status'
-                )
+                logging.info(f"WebHook received for Job {job_id} with unchanged status")
         else:
             message_id = bot.send_message(
                 chat_id=chat["id"], message=message, markup=reply_markup
             )
-            bot.context.table[project_token]["jobs"][data["build_id"]][
-                "message_id"
-            ] = message_id
+            ctx[job_id]["message_id"] = message_id
 
 
-def wiki_event_handler(data, bot, chats, project_token):
+def wiki_event_handler(
+    data: dict, bot: Bot, chats: List[int], project_token: str
+) -> None:
     """
     Defines the handler for when a wiki page event is received
     """
@@ -220,66 +218,44 @@ def wiki_event_handler(data, bot, chats, project_token):
         bot.send_message(chat_id=chat["id"], message=message)
 
 
-def pipeline_handler(data, bot, chats, project_token):
+def pipeline_handler(
+    data: dict, bot: Bot, chats: List[int], project_token: str
+) -> None:
     """
     Defines the hander for when a pipeline event is received
     """
+    ctx = bot.context.table[project_token]["pipelines"]
+    status = data["object_attributes"]["status"]
     status_changed = True
-    if data["object_attributes"]["id"] in bot.context.table[project_token]["pipelines"]:
-        if (
-            "status"
-            in bot.context.table[project_token]["pipelines"][
-                data["object_attributes"]["id"]
-            ]
-            and bot.context.table[project_token]["pipelines"][
-                data["object_attributes"]["id"]
-            ]["status"]
-            == data["object_attributes"]["status"]
-        ):
+    pipeline_id = data["object_attributes"]["id"]
+    if pipeline_id in ctx:
+        if "status" in ctx[pipeline_id] and ctx[pipeline_id]["status"] == status:
             status_changed = False
         if status_changed:
-            bot.context.table[project_token]["pipelines"][
-                data["object_attributes"]["id"]
-            ]["status"] = data["object_attributes"]["status"]
+            ctx[pipeline_id]["status"] = data["object_attributes"]["status"]
     else:
-        bot.context.table[project_token]["pipelines"][
-            data["object_attributes"]["id"]
-        ] = {"status": data["object_attributes"]["status"]}
+        ctx[pipeline_id] = {"status": status}
     message = f'<b>Project</b> {data["project"]["name"]}\n'
-    message += f'<b>Pipeline ID</b> {data["object_attributes"]["id"]}\n\n'
+    message += f"<b>Pipeline ID</b> {pipeline_id}\n\n"
     message += f'<b>Commit title</b> {data["commit"]["title"]}\n'
-    url = f'{data["project"]["web_url"]}/-/pipelines/{data["object_attributes"]["id"]}'
+    url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
     reply_markup = InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton(
-                    text=STATUSES[data["object_attributes"]["status"]], url=url
-                )
-            ]
-        ]
+        [[InlineKeyboardButton(text=STATUSES[status], url=url)]]
     )
     for chat in chats:
-        if (
-            "message_id"
-            in bot.context.table[project_token]["pipelines"][
-                data["object_attributes"]["id"]
-            ]
-        ):
-            message_id = bot.context.table[project_token]["pipelines"][
-                data["object_attributes"]["id"]
-            ]["message_id"]
+        if "message_id" in ctx[pipeline_id]:
+            message_id = ctx[pipeline_id]["message_id"]
             if status_changed:
                 bot.bot.edit_message_reply_markup(
                     chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
                 )
             else:
                 logging.info(
-                    f'WebHook received for Pipeline {data["object_attributes"]["id"]} with unchanged status'
+                    "WebHook received for Pipeline"
+                    f" {pipeline_id} with unchanged status"
                 )
         else:
             message_id = bot.send_message(
                 chat_id=chat["id"], message=message, markup=reply_markup
             )
-            bot.context.table[project_token]["pipelines"][
-                data["object_attributes"]["id"]
-            ]["message_id"] = message_id
+            ctx[pipeline_id]["message_id"] = message_id
