@@ -1,0 +1,11 @@
+__pycache__/
+.git/  
+.gitignore
+.vscode/
+config.json.example
+dev-requirements.txt
+docker-compose.yml
+Dockerfile
+LICENSE
+pyproject.toml
+README.md
