@@ -6,6 +6,7 @@ gitlab-webhook-telegram
 
 import json
 import logging
+import os
 import socketserver
 import sys
 from http.server import BaseHTTPRequestHandler
@@ -147,4 +148,4 @@ class App:
         httpd.server_close()
         httpd.shutdown()
         logging.info("Server is down")
-        sys.exit(0)
+        os._exit(0)
