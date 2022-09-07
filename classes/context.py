@@ -98,7 +98,7 @@ class Context:
         Add missing keys to table config file if needed
         """
         for token in self.table:
-            for kind in ("jobs", "pipelines"):
+            for kind in ("jobs", "pipelines", "merge_requests"):
                 if kind not in self.table[token]:
                     self.table[token][kind] = {}
                     logging.info(f"'{kind}' key missing from table, adding now")

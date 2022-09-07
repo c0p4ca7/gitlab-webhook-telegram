@@ -142,23 +142,48 @@ def merge_request_handler(
     """
     Defines the handler for when a merge request event is received
     """
+    ctx = bot.context.table[project_token]["merge_requests"]
+    oa = data["object_attributes"]
+    status = oa["merge_status"]
+    status_changed = True
+    mr_id = oa["iid"]
+    if mr_id in ctx:
+        if "status" in ctx[mr_id] and ctx[mr_id]["status"] == status:
+            status_changed = False
+        if status_changed:
+            ctx[mr_id]["status"] = status
+    else:
+        ctx[mr_id] = {"status": status}
+    message = f'<b>Project</b> {data["repository"]["name"]}\n'
+    message += f"<b>Merge Request ID</b> {mr_id}\n"
+    message += f'<b>Title</b> {oa["title"]}\n\n'
+    message += f'<b>Source branch</b> {oa["source_branch"]}\n'
+    message += f'<b>Target branch</b> {oa["target_branch"]}\n'
+    message += f'<b>Merge status</b> {oa["merge_status"]}\n'
+    labels = ", ".join([x["title"] for x in data["labels"]])
+    message += f'<b>State</b> {oa["state"]}'
+    if "assignee" in data:
+        message += f'<b>Assignee</b> {data["assignee"]["username"]}\n'
+    url = f'{oa["url"]}'
+    reply_markup = InlineKeyboardMarkup(
+        [[InlineKeyboardButton(text=STATUSES[status], url=url)]]
+    )
     for chat in chats:
-        oa = data["object_attributes"]
-        message = f'New merge request event on project {data["project"]["name"]}'
-        message += f'\nTitle : {oa["title"]}'
-        message += f'\nSource branch : {oa["source_branch"]}'
-        message += f'\nTarget branch : {oa["target_branch"]}'
-        message += f'\nMerge status : {oa["merge_status"]}'
-        message += f'\nState : {oa["state"]}'
-        if chat["verbosity"] >= VVV:
-            labels = ", ".join([x["title"] for x in data["labels"]])
-            if labels:
-                message += f"\nLabels : {labels}"
-            if "assignee" in data:
-                message += f'\nAssignee : {data["assignee"]["username"]}'
-        if chat["verbosity"] >= VV:
-            message += f'\nURL : {oa["url"]}'
-        bot.send_message(chat_id=chat["id"], message=message)
+        if chat["verbosity"] >= VVV and labels:
+            message += f"<b>Labels</b> {labels}"
+        if "message_id" in ctx[mr_id]:
+            message_id = ctx[mr_id]["message_id"]
+            if status_changed:
+                bot.bot.edit_message_reply_markup(
+                    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
+                )
+            else:
+                logging.info(f"WebHook received for Job {mr_id} with unchanged status")
+        else:
+            message_id = bot.send_message(
+                chat_id=chat["id"], message=message, markup=reply_markup
+            )
+            ctx[mr_id]["message_id"] = message_id
 
 
 def job_event_handler(
@@ -186,10 +211,10 @@ def job_event_handler(
     )
     for chat in chats:
         if chat["verbosity"] >= VV:
-            message += f'<b>Job name</b> : {data["build_name"]}\n'
-            message += f'<b>Job stage</b> : {data["build_stage"]}'
+            message += f'<b>Job name</b> {data["build_name"]}\n'
+            message += f'<b>Job stage</b> {data["build_stage"]}'
         if status == "failed":
-            message += f'\n\n<b>Failure reason</b> : {data["build_failure_reason"]}\n'
+            message += f'\n\n<b>Failure reason</b> {data["build_failure_reason"]}\n'
         if "message_id" in ctx[job_id]:
             message_id = ctx[job_id]["message_id"]
             if status_changed:

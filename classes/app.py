@@ -64,7 +64,7 @@ def get_RequestHandler(bot: Bot, context: CallbackContext) -> RequestHandlerType
         def __init__(self, *args, **kwargs) -> None:
             self.bot = bot
             self.context = context
-            super(RequestHandler, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         def _set_headers(self, code: int) -> None:
             """
