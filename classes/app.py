@@ -141,6 +141,7 @@ class App:
         )
         try:
             RequestHandler = get_RequestHandler(bot, context)
+            socketserver.TCPServer.allow_reuse_address = True
             httpd = socketserver.TCPServer(("", context.config["port"]), RequestHandler)
             httpd.serve_forever()
         except KeyboardInterrupt:
