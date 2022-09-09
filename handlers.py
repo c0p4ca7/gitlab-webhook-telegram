@@ -17,9 +17,13 @@ VVVV = 3
 
 STATUSES = {
     "canceled": emojize("Canceled :x:", language="alias"),
+    "closed": emojize("Closed :red_circle:", language="alias"),
     "created": emojize("Created :new:", language="alias"),
     "failed": emojize("Failed :x:", language="alias"),
+    "locked": emojize("Locked :locked_with_key:", language="alias"),
     "manual": emojize("Manual :three_button_mouse:", language="alias"),
+    "merged": emojize("Merged :shuffle_tracks_button:", language="alias"),
+    "opened": emojize("Opened :green_circle:", language="alias"),
     "pending": emojize("Pending :hourglass:", language="alias"),
     "preparing": emojize("Preparing :writing_hand:"),
     "running": emojize("Running :person_running:", language="alias"),
@@ -144,7 +148,7 @@ def merge_request_handler(
     """
     ctx = bot.context.table[project_token]["merge_requests"]
     oa = data["object_attributes"]
-    status = oa["merge_status"]
+    status = oa["state"]
     status_changed = True
     mr_id = oa["iid"]
     if mr_id in ctx:
@@ -161,7 +165,6 @@ def merge_request_handler(
     message += f'<b>Target branch</b> {oa["target_branch"]}\n'
     message += f'<b>Merge status</b> {oa["merge_status"]}\n'
     labels = ", ".join([x["title"] for x in data["labels"]])
-    message += f'<b>State</b> {oa["state"]}'
     if "assignee" in data:
         message += f'<b>Assignee</b> {data["assignee"]["username"]}\n'
     url = f'{oa["url"]}'
