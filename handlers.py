@@ -264,7 +264,7 @@ def pipeline_handler(
     commit_title = data["commit"]["title"]
     commit_author_name = data["commit"]["author"]["name"]
     commit_author_email = data["commit"]["author"]["email"]
-    builds_author_name = data[0]["builds"]["user"]["name"]
+    builds_author_name = data["builds"][0]["user"]["name"]
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
 
     if pipeline_id in ctx:
