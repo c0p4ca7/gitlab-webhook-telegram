@@ -282,7 +282,7 @@ def pipeline_handler(
             ctx[pipeline_id]["status"] = data["object_attributes"]["status"]
     else:
         ctx[pipeline_id] = {"status": status}
-    message = f'<b>Project:</b> <a href="{project_web_url}">{project_full_path}</a>\n'
+    message = f'<b>Project:</b> {status} <a href="{project_web_url}">{project_full_path}</a>\n'
     message += f"<b>Branch:</b> {branch}\n"
     message += f'<b>Commit:</b>\n'
     message += f'<b> - sha:</b> <a href="{commit_url}">{commit_id}</a>\n'
@@ -305,7 +305,7 @@ def pipeline_handler(
             message_id = ctx[pipeline_id]["message_id"]
             if status_changed:
                 bot.bot.edit_message_reply_markup(
-                    chat_id=chat["id"], reply_markup=reply_markup, message_id=message_id
+                    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
                 )
             else:
                 logging.info(
@@ -314,6 +314,6 @@ def pipeline_handler(
                 )
         else:
             message_id = bot.send_message(
-                chat_id=chat["id"], markup=reply_markup, message=message
+                chat_id=chat["id"], message=message, markup=reply_markup
             )
             ctx[pipeline_id]["message_id"] = message_id
