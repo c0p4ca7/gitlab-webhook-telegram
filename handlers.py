@@ -282,11 +282,21 @@ def pipeline_handler(
             ctx[pipeline_id]["status"] = data["object_attributes"]["status"]
     else:
         ctx[pipeline_id] = {"status": status}
+    message = f'<b>Project:</b> <a href="{project_web_url}">{project_full_path}</a>\n'
+    message += f"<b>Branch:</b> {branch}\n"
+    message += f'<b>Commit:</b>\n'
+    message += f'<b> - sha:</b> <a href="{commit_url}">{commit_id}</a>\n'
+    message += f'<b> - msg:</b> {commit_title}\n'
+    message += f'<b> - author:</b> {commit_author_name} ({commit_author_email})\n\n'
+    message += f'<b>Pipeline:</b> <a href="{url}">{pipeline_id}</a> triggered by {builds_author_name}\n'
+    message += f'<b> - stage:</b> {build_stage}\n'
+    message += f'<b> - name:</b> {build_name}\n'
+    message += f'<b> - created_at:</b> {build_created_at}\n'
+    message += f'<b> - finished_at:</b> {build_finished_at}\n'
+    message += f'<b> - duration:</b> {build_duration}\n'
+    message += f'<b> - queued_duration:</b> {build_queued_duration}\n'
 
-    url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
-    reply_markup = InlineKeyboardMarkup(
-        [[InlineKeyboardButton(text=STATUSES[status], url=url)]]
-    )
+
     for chat in chats:
         if "message_id" in ctx[pipeline_id]:
             message_id = ctx[pipeline_id]["message_id"]
@@ -304,18 +314,3 @@ def pipeline_handler(
                 chat_id=chat["id"], message=message, markup=reply_markup
             )
             ctx[pipeline_id]["message_id"] = message_id
-    message = f'<b>Project:</b> <a href="{project_web_url}">{project_full_path}</a>\n'
-    message += f"<b>Branch:</b> {branch}\n"
-    message += f'<b>Commit:</b>\n'
-    message += f'<b> - sha:</b> <a href="{commit_url}">{commit_id}</a>\n'
-    message += f'<b> - msg:</b> {commit_title}\n'
-    message += f'<b> - author:</b> {commit_author_name} ({commit_author_email})\n\n'
-    message += f'<b>Pipeline:</b> <a href="{url}">{pipeline_id}</a> triggered by {builds_author_name}\n'
-    message += f'<b> - stage:</b> {build_stage}\n'
-    message += f'<b> - name:</b> {build_name}\n'
-    message += f'<b> - created_at:</b> {build_created_at}\n'
-    message += f'<b> - finished_at:</b> {build_finished_at}\n'
-    message += f'<b> - duration:</b> {build_duration}\n'
-    message += f'<b> - queued_duration:</b> {build_queued_duration}\n'
-
-
