@@ -265,6 +265,7 @@ def pipeline_handler(
     commit_author_name = data["commit"]["author"]["name"]
     commit_author_email = data["commit"]["author"]["email"]
     builds_author_name = data["builds"][0]["user"]["name"]
+    builds_avatar_url = data["builds"][0]["user"]["avatar_url"]
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
 
     if pipeline_id in ctx:
@@ -280,7 +281,7 @@ def pipeline_handler(
     message += f'<b> - sha:</b> <a href="{commit_url}">{commit_id}</a>\n'
     message += f'<b> - msg:</b> {commit_title}\n'
     message += f'<b> - author:</b> {commit_author_name} ({commit_author_email})\n'
-    message += f'<b>Pipeline:</b> <a href="{url}">{pipeline_id}</a> triggered by {builds_author_name}\n\n'
+    message += f'<b>Pipeline:</b> <a href="{url}">{pipeline_id}</a> triggered by <img src="{builds_avatar_url}"></img>{builds_author_name}\n\n'
     
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
     reply_markup = InlineKeyboardMarkup(
