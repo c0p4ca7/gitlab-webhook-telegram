@@ -258,6 +258,10 @@ def pipeline_handler(
     pipeline_id = data["object_attributes"]["id"]
     branch = data["object_attributes"]["ref"]
     commit_id = data["commit"]["id"][0:8]
+    commit_url = data["commit"]["url"]
+    commit_title = data["commit"]["title"]
+    commit_author_name = data["commit"]["author"]["name"]
+    commit_author_email = data["commit"]["author"]["email"]
     if pipeline_id in ctx:
         if "status" in ctx[pipeline_id] and ctx[pipeline_id]["status"] == status:
             status_changed = False
@@ -267,7 +271,10 @@ def pipeline_handler(
         ctx[pipeline_id] = {"status": status}
     message = f'<b>Project:</b> {data["project"]["path_with_namespace"]}\n'
     message += f"<b>Branch:</b> {branch}\n"
-    message += f'<b>Commit:</b> [sha: <a href="https://github.com/">{commit_id}</a>, msg: {data["commit"]["title"]}]\n'
+    message += f'<b>Commit:</b>\n'
+    message += f'<b> - sha:</b> <a href={commit_url}>{commit_id}</a>\n'
+    message += f'<b> - msg:</b> {commit_title}\n'
+    message += f'<b> - author:</b> {commit_author_name} ({commit_author_email})\n'
     message += f"<b>Pipeline ID:</b> {pipeline_id}\n\n"
     
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
