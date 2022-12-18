@@ -314,6 +314,7 @@ class Bot:
             else:
                 if token not in self.context.table:
                     self.context.table[token] = {}
+                    self.context.table[token][chat_id] = {}
                 self.context.table[token][chat_id]["verbosity"] = VVVV
                 self.context.write_table()
                 bot.edit_message_text(
