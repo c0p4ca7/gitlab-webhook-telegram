@@ -255,8 +255,8 @@ def pipeline_handler(
     ctx = bot.context.table[project_token]["pipelines"]
     status = data["object_attributes"]["status"]
     status_changed = True
-    project_full_path: data["project"]["path_with_namespace"]
-    project_web_url: data["project"]["web_url"]
+    project_full_path = data["project"]["path_with_namespace"]
+    project_web_url = data["project"]["web_url"]
     pipeline_id = data["object_attributes"]["id"]
     branch = data["object_attributes"]["ref"]
     commit_id = data["commit"]["id"][0:8]
