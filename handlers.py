@@ -256,6 +256,7 @@ def pipeline_handler(
     status = data["object_attributes"]["status"]
     status_changed = True
     pipeline_id = data["object_attributes"]["id"]
+    branch = data["object_attributes"]["ref"]
     if pipeline_id in ctx:
         if "status" in ctx[pipeline_id] and ctx[pipeline_id]["status"] == status:
             status_changed = False
@@ -263,9 +264,12 @@ def pipeline_handler(
             ctx[pipeline_id]["status"] = data["object_attributes"]["status"]
     else:
         ctx[pipeline_id] = {"status": status}
-    message = f'<b>Project</b> {data["project"]["name"]}\n'
-    message += f"<b>Pipeline ID</b> {pipeline_id}\n\n"
-    message += f'<b>Commit title</b> {data["commit"]["title"]}\n'
+    message = f'<b>Project:</b> {data["project"]["path_with_namespace"]}\n'
+    message += f"<b>Branch:</b> {branch}\n"
+    message += f'<b>Commit:</b> {data["commit"]["id"]}\n'
+    message += f'<b>       </b> {data["commit"]["title"]}\n'
+    message += f"<b>Pipeline ID:</b> {pipeline_id}\n\n"
+    
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
     reply_markup = InlineKeyboardMarkup(
         [[InlineKeyboardButton(text=STATUSES[status], url=url)]]
