@@ -271,7 +271,10 @@ def pipeline_handler(
         ctx[pipeline_id] = {"status": status}
     message = f'<b>Project:</b> {data["project"]["path_with_namespace"]}\n'
     message += f"<b>Branch:</b> {branch}\n"
-    message += f'<b>Commit:</b> <a href="{commit_url}">{commit_id}</a>\n'
+    message += f'<b>Commit:</b>\n'
+    message += f'<b> - sha:</b> <a href="{commit_url}">{commit_id}</a>\n'
+    message += f'<b> - msg:</b> {commit_title}\n'
+    message += f'<b> - author:</b> {commit_author_name} ({commit_author_email})\n'
     message += f"<b>Pipeline ID:</b> {pipeline_id}\n\n"
     
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
