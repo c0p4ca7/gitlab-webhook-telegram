@@ -288,7 +288,7 @@ def pipeline_handler(
     message += f'<b> - sha:</b> <a href="{commit_url}">{commit_id}</a>\n'
     message += f'<b> - msg:</b> {commit_title}\n'
     message += f'<b> - author:</b> {commit_author_name} ({commit_author_email})\n\n'
-    message += f'<b>Pipeline:</b> <a href="{url}">{pipeline_id}</a> triggered by {builds_author_name}\n\n'
+    message += f'<b>Pipeline:</b> <a href="{url}">{pipeline_id}</a> triggered by {builds_author_name}\n'
     message += f'<b> - stage:</b> {build_stage}\n'
     message += f'<b> - name:</b> {build_name}\n'
     message += f'<b> - created_at:</b> {build_created_at}\n'
