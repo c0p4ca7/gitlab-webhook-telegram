@@ -282,6 +282,11 @@ def pipeline_handler(
             ctx[pipeline_id]["status"] = data["object_attributes"]["status"]
     else:
         ctx[pipeline_id] = {"status": status}
+
+    url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
+    reply_markup = InlineKeyboardMarkup(
+        [[InlineKeyboardButton(text=STATUSES[status], url=url)]]
+    )
     message = f'<b>Project:</b> <a href="{project_web_url}">{project_full_path}</a>\n'
     message += f"<b>Branch:</b> {branch}\n"
     message += f'<b>Commit:</b>\n'
