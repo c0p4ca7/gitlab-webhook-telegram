@@ -257,7 +257,7 @@ def pipeline_handler(
     status_changed = True
     pipeline_id = data["object_attributes"]["id"]
     branch = data["object_attributes"]["ref"]
-    commit_id = print(data["commit"]["id"][0:8])
+    commit_id = data["commit"]["id"][0:8]
     if pipeline_id in ctx:
         if "status" in ctx[pipeline_id] and ctx[pipeline_id]["status"] == status:
             status_changed = False
