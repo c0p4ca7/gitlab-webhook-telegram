@@ -284,8 +284,8 @@ def pipeline_handler(
         ctx[pipeline_id] = {"status": status}
     emoji_status = STATUSES[status]
 
-    message = f'Status: {status} {emoji_status}\n'
-    message += f'<b>Project:</b><a href="{project_web_url}">{project_full_path}</a>\n'
+    message = f'{emoji_status}\n'
+    message += f'<b>Project:</b> <a href="{project_web_url}">{project_full_path}</a>\n'
     message += f"<b>Branch:</b> {branch}\n"
     message += f'<b>Commit:</b>\n'
     message += f'<b> - sha:</b> <a href="{commit_url}">{commit_id}</a>\n'
