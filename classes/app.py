@@ -18,6 +18,8 @@ import handlers
 from classes.bot import Bot
 from classes.context import Context
 
+
+hook_url_path = "/gitlab-tg-hook"
 PUSH = "Push Hook"
 TAG = "Tag Push Hook"
 RELEASE = "Release Hook"
@@ -78,8 +80,8 @@ def get_RequestHandler(bot: Bot, context: CallbackContext) -> RequestHandlerType
             """
             Handler for POST requests
             """
-            if self.path != '/gitlab-tg-hook':
-                logging.warning("URL path is not valid.")
+            if self.path != hook_url_path:
+                logging.error("URL path: " + self.path + " - is not valid..")
                 self._set_headers(403)
             token = self.headers["X-Gitlab-Token"]
             if self.context.is_authorized_project(token):
