@@ -303,9 +303,9 @@ def pipeline_handler(
         if "message_id" in ctx[pipeline_id]:
             message_id = ctx[pipeline_id]["message_id"]
             if status_changed:
-                bot.bot.edit_message_reply_markup(
-                    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
-                )
+                #bot.bot.edit_message_reply_markup(
+                #    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
+                #)
                 bot.bot.edit_message_text(
                     chat_id=chat["id"], message_id=message_id, text="Seriously, you're on your own, kiddo.", reply_markup=reply_markup
                 )
