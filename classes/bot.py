@@ -181,7 +181,7 @@ class Bot:
                 project
                 for project in self.context.config["gitlab-projects"]
                 if (
-                    str(chat_id) in project["user-ids"]
+                    str(chat_id) in project["user-ids"] or str("*") in project["user-ids"]
                     and (
                         (
                             project["token"] in self.context.table
