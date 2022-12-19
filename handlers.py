@@ -297,14 +297,14 @@ def pipeline_handler(
 
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
     reply_markup = InlineKeyboardMarkup(
-        [[InlineKeyboardButton(text=STATUSES[message], url=url)]]
+        [[InlineKeyboardButton(text=STATUSES[status], url=url)]]
     )
     for chat in chats:
         if "message_id" in ctx[pipeline_id]:
             message_id = ctx[pipeline_id]["message_id"]
             if status_changed:
                 bot.bot.edit_message_reply_markup(
-                    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
+                    chat_id=chat["id"], message="test", message_id=message_id, reply_markup=reply_markup
                 )
             else:
                 logging.info(
