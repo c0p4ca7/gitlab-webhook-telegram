@@ -268,10 +268,10 @@ def pipeline_handler(
     builds_avatar_url = data["builds"][0]["user"]["avatar_url"]
     build_stage = data["builds"][0]["stage"]
     build_name = data["builds"][0]["name"]
-    build_created_at = data["object_attributes"]["created_at"]
-    build_finished_at = data["object_attributes"]["finished_at"]
-    build_duration = data["object_attributes"]["duration"]
-    build_queued_duration = data["object_attributes"]["queued_duration"]
+    build_created_at = data["builds"][0]["created_at"]
+    build_finished_at = data["builds"][0]["finished_at"]
+    build_duration = data["builds"][0]["duration"]
+    build_queued_duration = data["builds"][0]["queued_duration"]
 
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
 
@@ -307,7 +307,7 @@ def pipeline_handler(
                 #    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
                 #)
                 bot.bot.edit_message_text(
-                    chat_id=chat["id"], message_id=message_id, text="Seriously, you're on your own, kiddo.", reply_markup=reply_markup
+                    chat_id=chat["id"], message_id=message_id, text=message, reply_markup=reply_markup
                 )
             else:
                 logging.info(
