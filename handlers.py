@@ -307,7 +307,7 @@ def pipeline_handler(
                 #    chat_id=chat["id"], message_id=message_id, reply_markup=reply_markup
                 #)
                 bot.bot.edit_message_text(
-                    chat_id=chat["id"], message_id=message_id, text=message, reply_markup=reply_markup
+                    chat_id=chat["id"], message_id=message_id, text=message, parse_mode='HTML', reply_markup=reply_markup
                 )
             else:
                 logging.info(
