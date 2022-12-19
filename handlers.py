@@ -282,7 +282,7 @@ def pipeline_handler(
             ctx[pipeline_id]["status"] = data["object_attributes"]["status"]
     else:
         ctx[pipeline_id] = {"status": status}
-    message = f'<b>Project:</b> {status} <a href="{project_web_url}">{project_full_path}</a>\n'
+    message = f'<b>Project:</b>' + STATUSES[status] + ' <a href="{project_web_url}">{project_full_path}</a>\n'
     message += f"<b>Branch:</b> {branch}\n"
     message += f'<b>Commit:</b>\n'
     message += f'<b> - sha:</b> <a href="{commit_url}">{commit_id}</a>\n'
