@@ -294,11 +294,10 @@ def pipeline_handler(
     message += f'<b> - created_at:</b> {build_created_at}\n'
     message += f'<b> - finished_at:</b> {build_finished_at}\n'
     message += f'<b> - duration:</b> {build_duration}\n'
-    message += f'<b> - queued_duration:</b> {build_queued_duration}\n'
 
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
     reply_markup = InlineKeyboardMarkup(
-        [[InlineKeyboardButton(text=STATUSES[status], url=url)]]
+        [[InlineKeyboardButton(text=STATUSES[message], url=url)]]
     )
     for chat in chats:
         if "message_id" in ctx[pipeline_id]:
