@@ -271,7 +271,7 @@ def pipeline_handler(
     build_created_at = data["builds"][0]["created_at"]
     build_finished_at = data["builds"][0]["finished_at"]
     build_duration = data["builds"][0]["duration"]
-    build_queued_duration = data["builds"][0]["queued_duration"]
+    #build_queued_duration = data["builds"][0]["queued_duration"]
 
     url = f'{data["project"]["web_url"]}/-/pipelines/{pipeline_id}'
 
