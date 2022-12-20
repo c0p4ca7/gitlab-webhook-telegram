@@ -80,6 +80,7 @@ class Context:
                     self.table[token] = {}
                     for chat_id in tmp[token]:
                         self.table[token][int(chat_id)] = tmp[token][chat_id]
+                        print(self.table[token][int(chat_id)])
         except FileNotFoundError:
             logging.warning(
                 f"Файл {self.directory}chats_projects.json не найден. Возможно пустой"
