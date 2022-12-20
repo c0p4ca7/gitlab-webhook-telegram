@@ -1,6 +1,6 @@
 # Gitlab-webhook-telegram
 
-> Original project from [nanoy42/gitlab-webhook-telegram](https://github.com/nanoy42/gitlab-webhook-telegram)
+> Original project from [BapRx/gitlab-webhook-telegram](https://github.com/BapRx/gitlab-webhook-telegram)
 
 ## What can GWT do for you ?
 
@@ -25,7 +25,7 @@ First things first, you need a telegram bot. To get one, you need to interact wi
 You can clone the git repository with
 
 ```bash
-git clone https://github.com/BapRx/gitlab-webhook-telegram.git
+git clone https://github.com/c0p4ca7/gitlab-webhook-telegram.git
 cd gitlab-webhook-telegram
 ```
 
@@ -63,11 +63,11 @@ See the configuration options:
 
 The array of `gitlab-projects` should contain name and token for each project :
 
-| Parameter  | Type         | Description                                                                                             |
-| ---------- | ------------ | ------------------------------------------------------------------------------------------------------- |
-| `name`     | string       | Pretty name of project.                                                                                 |
-| `token`    | string       | Token of project. It sould be the same as on the gitlab webhook page. Cannot be more than 64 character. |
-| `user-ids` | list(string) | List of telegram user IDs allowed to list the preconfigured projects.                                   |
+| Parameter  | Type         | Description                                                                                                                             |
+| ---------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------|
+| `name`     | string       | Pretty name of project.                                                                                                                 |
+| `token`    | string       | Token of project. It sould be the same as on the gitlab webhook page. Cannot be more than 64 character.                                 |
+| `user-ids` | list(string) | List of telegram user IDs (wildcard symbol * to allow any telegram user IDs for the project) allowed to list the preconfigured projects.|
 
 The log level should be picked among :
 
@@ -88,14 +88,19 @@ A working `config.json` example :
   "passphrase": "BCX2ipcGv5wCorPUWhTi9SXfWK6gz7",
   "gitlab-projects": [
     {
-      "name": "My awesome project",
+      "name": "Project 1",
       "token": "this is a secret token",
       "user-ids": ["000000007"]
     },
     {
-      "name": "Another project",
+      "name": "Project 2",
       "token": "G4oJnAm9ljWksgfjGTnUcUguv6WvkF",
       "user-ids": ["000000001", "000000002"]
+    },
+    {
+      "name": "Wildcard access project",
+      "token": "G4oJnAm9ljWksgfjGTnUcUguv6WvkF",
+      "user-ids": ["*"]
     }
   ],
   "log-level": "INFO"

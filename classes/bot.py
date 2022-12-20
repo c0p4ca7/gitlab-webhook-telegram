@@ -138,14 +138,14 @@ class Bot:
         chat_id = update.message.chat_id
         bot = context.bot
         bot.send_message(
-            chat_id=chat_id, text="Hi. I'm a simple bot triggered by GitLab webhooks."
+            chat_id=chat_id, text="Привет. Я GitLabBot, запускаемый вебхуками GitLab CI."
         )
         if chat_id in self.context.verified_chats:
             bot.send_message(
                 chat_id=chat_id,
                 text=(
-                    "Since your chat is already verified, send /help to see the"
-                    " available commands."
+                    "Поскольку ваш чат уже проверен, отправьте /help, чтобы увидеть"
+                    " доступные команды."
                 ),
             )
         elif not self.context.config["passphrase"]:
@@ -154,16 +154,16 @@ class Bot:
             bot.send_message(
                 chat_id=chat_id,
                 text=(
-                    "Your chat is now verified, send /help to see the available"
-                    " commands."
+                    "Ваш чат проверен отправьте /help, чтобы увидеть доступные"
+                    " команды."
                 ),
             )
         else:
             bot.send_message(
                 chat_id=chat_id,
                 text=(
-                    "First things first : you need to verify this chat. Just send me"
-                    " the passphrase."
+                    "Перво-наперво: вам нужно подтвердить этот чат. Просто пришлите мне"
+                    " кодовую фразу."
                 ),
             )
             self.context.wait_for_verification = True
@@ -204,14 +204,14 @@ class Bot:
                 bot.send_message(
                     chat_id=chat_id,
                     reply_markup=replyKeyboard,
-                    text="Choose the project you want to add.",
+                    text="Выберите проект, который хотите добавить.",
                 )
             else:
-                bot.send_message(chat_id=chat_id, text="No project to add.")
+                bot.send_message(chat_id=chat_id, text="Нет проекта для добавления.")
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="This chat is not verified, start with the command /start.",
+                text="Этот чат не проверен, начните с команды /start.",
             )
 
     def change_verbosity(self, update: Update, context: CallbackContext) -> None:
@@ -244,16 +244,16 @@ class Bot:
                 bot.send_message(
                     chat_id=chat_id,
                     reply_markup=replyKeyboard,
-                    text="Choose the project from which you want to change verbosity.",
+                    text="Выберите проект, из которого вы хотите изменить детализацию.",
                 )
             else:
                 bot.send_message(
-                    chat_id=chat_id, text="No project configured on this chat."
+                    chat_id=chat_id, text="В этом чате не настроен проект."
                 )
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="This chat is not verified, start with the command /start.",
+                text="Этот чат не проверен, начните с команды /start.",
             )
 
     def remove_project(self, update: Update, context: CallbackContext) -> None:
@@ -286,14 +286,14 @@ class Bot:
                 bot.send_message(
                     chat_id=chat_id,
                     reply_markup=replyKeyboard,
-                    text="Choose the project you want to remove.",
+                    text="Выберите проект, который необходимо удалить.",
                 )
             else:
                 bot.send_message(chat_id=chat_id, text="No project to remove.")
         else:
             bot.send_message(
                 chat_id=chat_id,
-                text="This chat is not verified, start with the command /start.",
+                text="Этот чат не проверен, начните с команды /start.",
             )
 
     def button(self, update: Update, context: CallbackContext) -> None:
@@ -307,7 +307,7 @@ class Bot:
             chat_id = query.message.chat_id
             if token in self.context.table and chat_id in self.context.table[token]:
                 bot.edit_message_text(
-                    text="Project was already there. Changing nothing.",
+                    text="Проект уже был добавлен раннее. Изменения не требуются.",
                     chat_id=chat_id,
                     message_id=query.message.message_id,
                 )
@@ -318,7 +318,7 @@ class Bot:
                 self.context.table[token][chat_id]["verbosity"] = VVVV
                 self.context.write_table()
                 bot.edit_message_text(
-                    text="The project was successfully added.",
+                    text="Проект успешно добавлен.",
                     chat_id=chat_id,
                     message_id=query.message.message_id,
                 )
@@ -331,13 +331,13 @@ class Bot:
                 or chat_id not in self.context.table[token]
             ):
                 bot.edit_message_text(
-                    text="Project was not there. Changing nothing.", chat_id=chat_id
+                    text="Проекта не найден. Изменения не требуются.", chat_id=chat_id
                 )
             else:
                 del self.context.table[token][chat_id]
                 self.context.write_table()
                 bot.edit_message_text(
-                    text="The project was successfully removed.",
+                    text="Проект успешно удален.",
                     chat_id=chat_id,
                     message_id=query.message.message_id,
                 )
@@ -375,7 +375,7 @@ class Bot:
             bot.edit_message_text(
                 chat_id=chat_id,
                 message_id=query.message.message_id,
-                text="The verbosity of the project has been changed.",
+                text="Детализация проекта изменена.",
             )
             self.context.selected_project = None
         else:
@@ -393,15 +393,15 @@ class Bot:
                 bot.send_message(
                     chat_id=update.message.chat_id,
                     text=(
-                        "Thank you, your user ID is now verified. Send /help to see the"
-                        " available commands."
+                        "Спасибо, ваш идентификатор пользователя подтвержден. Отправьте /help, чтобы увидеть"
+                        " доступные команды."
                     ),
                 )
                 self.context.wait_for_verification = False
             else:
                 bot.send_message(
                     chat_id=update.message.chat_id,
-                    text="The passphrase is incorrect. Still waiting for verification.",
+                    text="Парольная фраза неверна. Все еще жду проверки.",
                 )
 
     def help(self, update: Update, context: CallbackContext) -> None:
@@ -409,13 +409,13 @@ class Bot:
         Defines the handler for /help command
         """
         bot = context.bot
-        message = "Project gitlab-webhook-telegram v1.0.0\n"
-        message += "You can use the following commands : \n\n"
-        message += "/listProjects : list tracked projects in this chat\n"
-        message += "/addProject : add a project in this chat\n"
-        message += "/removeProject : remove a project from this chat\n"
-        message += "/changeVerbosity : change the level of information of a chat\n"
-        message += "/help : display this message"
+        message = "Проект gitlab-webhook-telegram v1.1.0\n"
+        message += "Вы можете использовать следующие команды : \n\n"
+        message += "/listProjects : список отслеживаемых проектов в этом чате\n"
+        message += "/addProject : добавить проект в этот чат\n"
+        message += "/removeProject : удалить проект из этого чата\n"
+        message += "/changeVerbosity : изменить уровень информации чата\n"
+        message += "/help : показать это сообщение"
         bot.send_message(chat_id=update.message.chat_id, text=message)
 
     def list_projects(self, update: Update, context: CallbackContext) -> None:

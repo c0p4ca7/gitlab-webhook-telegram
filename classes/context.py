@@ -48,8 +48,8 @@ class Context:
             )
         ):
             print(
-                f"{self.directory}config.json seems to be misconfigured, please follow"
-                " the README instructions."
+                f"{self.directory}config.json кажется, неправильно настроен, пожалуйста, следуйте"
+                " инструкциям README."
             )
             sys.exit()
 
@@ -63,12 +63,12 @@ class Context:
                 self.verified_chats = json.load(verified_chats_file)
         except FileNotFoundError:
             logging.warning(
-                f"File {self.directory}verified_chats.json not found. Assuming empty"
+                f"File {self.directory}verified_chats.json не найден. Возможно пустой"
             )
             self.verified_chats = []
         except Exception as e:
             logging.critical(
-                f"Unable to read {self.directory}verified_chats.json. Exception follows"
+                f"Невозможно прочитать файл {self.directory}verified_chats.json."
             )
             logging.critical(str(e))
             sys.exit()
@@ -82,12 +82,12 @@ class Context:
                         self.table[token][int(chat_id)] = tmp[token][chat_id]
         except FileNotFoundError:
             logging.warning(
-                f"File {self.directory}chats_projects.json not found. Assuming empty"
+                f"Файл {self.directory}chats_projects.json не найден. Возможно пустой"
             )
             self.table = {}
         except Exception as e:
             logging.critical(
-                f"Unable to read {self.directory}chats_projects.json. Exception follows"
+                f"Невозможно прочитать файл {self.directory}chats_projects.json."
             )
             logging.critical(str(e))
             sys.exit()
@@ -101,7 +101,7 @@ class Context:
             for kind in ("jobs", "pipelines", "merge_requests"):
                 if kind not in self.table[token]:
                     self.table[token][kind] = {}
-                    logging.info(f"'{kind}' key missing from table, adding now")
+                    logging.info(f"'{kind}' ключ отсутствует в таблице, добавляю")
         return self.table
 
     def write_verified_chats(self) -> None:
