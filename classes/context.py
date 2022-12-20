@@ -79,8 +79,8 @@ class Context:
                 for token in tmp:
                     self.table[token] = {}
                     for chat_id in tmp[token]:
-                        self.table[token][int(chat_id)] = tmp[token][chat_id]
-                        print(self.table[token][int(chat_id)])
+                        if chat_id not in ("jobs", "pipelines", "merge_requests"):
+                            self.table[token][int(chat_id)] = tmp[token][chat_id]
         except FileNotFoundError:
             logging.warning(
                 f"Файл {self.directory}chats_projects.json не найден. Возможно пустой"
